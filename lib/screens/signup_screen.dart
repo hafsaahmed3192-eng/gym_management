@@ -109,6 +109,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
 
                 const SizedBox(height: 8),
+                const Text(
+                  "Be an Inspiration",
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 16,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
 
 
 
@@ -254,6 +262,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
 
                 const SizedBox(height: 30),
+                //////////////////////////////////////////////////////
+                /// ALREADY HAVE ACCOUNT? LOGIN
+//////////////////////////////////////////////////////
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Already have an account? ",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context); // Goes back to Login screen
+                      },
+                      child: const Text(
+                        "Login",
+                        style: TextStyle(
+                          color: Color(0xFFFFD700),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
               ],
             ),
           ),
