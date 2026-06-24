@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'gender_selection_screen.dart';
+import '../services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -15,7 +15,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _emailPhoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
-  TextEditingController();
+      TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -71,7 +71,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 //////////////////////////////////////////////////////
                 /// LOGO
                 //////////////////////////////////////////////////////
-
                 const Icon(
                   Icons.fitness_center,
                   size: 80,
@@ -83,7 +82,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 //////////////////////////////////////////////////////
                 /// APP NAME
                 //////////////////////////////////////////////////////
-
                 RichText(
                   text: const TextSpan(
                     children: [
@@ -119,8 +117,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
 
-
-
                 const SizedBox(height: 50),
                 const Text(
                   "SIGN UP",
@@ -133,19 +129,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                 const SizedBox(height: 10),
 
-
                 const SizedBox(height: 40),
 
                 //////////////////////////////////////////////////////
                 /// FULL NAME
                 //////////////////////////////////////////////////////
-
                 _buildTextField(
                   controller: _nameController,
                   hint: "Full Name",
                   icon: Icons.person,
                   validator: (value) =>
-                  value!.isEmpty ? "Full Name is required" : null,
+                      value!.isEmpty ? "Full Name is required" : null,
                 ),
 
                 const SizedBox(height: 20),
@@ -153,7 +147,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 //////////////////////////////////////////////////////
                 /// EMAIL OR MOBILE
                 //////////////////////////////////////////////////////
-
                 _buildTextField(
                   controller: _emailPhoneController,
                   hint: "Email or Mobile Number",
@@ -171,7 +164,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 //////////////////////////////////////////////////////
                 /// PASSWORD
                 //////////////////////////////////////////////////////
-
                 _buildTextField(
                   controller: _passwordController,
                   hint: "Password",
@@ -198,7 +190,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 //////////////////////////////////////////////////////
                 /// CONFIRM PASSWORD
                 //////////////////////////////////////////////////////
-
                 _buildTextField(
                   controller: _confirmPasswordController,
                   hint: "Confirm Password",
@@ -219,8 +210,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     onPressed: () {
                       setState(() {
-                        _obscureConfirmPassword =
-                        !_obscureConfirmPassword;
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
                       });
                     },
                   ),
@@ -231,19 +221,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 //////////////////////////////////////////////////////
                 /// SIGN UP BUTTON
                 //////////////////////////////////////////////////////
-
                 SizedBox(
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const GenderSelectionScreen(),
-                          ),
-                        );
+                        try {
+                          await AuthService().signUp(
+                            name: _nameController.text.trim(),
+                            email: _emailPhoneController.text.trim(),
+                            password: _passwordController.text.trim(),
+                          );
+
+                          if (!mounted) return;
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Account Created Successfully ✅"),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+
+                          // Wait 1 second so user can see message
+                          await Future.delayed(const Duration(seconds: 1));
+
+                          Navigator.pop(context); // Goes back to Login
+                        } catch (e) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(e.toString())));
+                        }
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -264,10 +272,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
 
                 const SizedBox(height: 30),
+
                 //////////////////////////////////////////////////////
                 /// ALREADY HAVE ACCOUNT? LOGIN
-//////////////////////////////////////////////////////
-
+                //////////////////////////////////////////////////////
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:gym_management/screens/age_selection_screen.dart';
-import 'package:gym_management/services/auth_service.dart';
+import 'package:gym_management/screens/dashboard_screen.dart';
+import '../services/auth_service.dart';
 
-class GenderSelectionScreen extends StatefulWidget {
-  const GenderSelectionScreen({super.key});
+class ActivityLevelScreen extends StatefulWidget {
+  const ActivityLevelScreen({super.key});
 
   @override
-  State<GenderSelectionScreen> createState() => _GenderSelectionScreenState();
+  State<ActivityLevelScreen> createState() => _ActivityLevelScreenState();
 }
 
-class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
-  String? selectedGender;
+class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
+  String? selectedLevel;
   bool _isLoading = false;
+
+  final List<String> activityLevels = ["Beginner", "Intermediate", "Advance"];
 
   @override
   Widget build(BuildContext context) {
@@ -22,39 +24,54 @@ class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 30),
           child: Column(
             children: [
-              const SizedBox(height: 60),
+              const SizedBox(height: 50),
+
+              //////////////////////////////////////////////////////
+              /// BACK BUTTON
+              //////////////////////////////////////////////////////
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD700)),
+                  label: const Text(
+                    "Back",
+                    style: TextStyle(color: Color(0xFFFFD700)),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
 
               //////////////////////////////////////////////////////
               /// TITLE
               //////////////////////////////////////////////////////
               const Text(
-                "Tell Us About You",
+                "Physical Activity Level",
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 28,
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
                 ),
               ),
 
               const SizedBox(height: 10),
 
-              const Text(
-                "Select your gender",
-                style: TextStyle(color: Colors.grey, fontSize: 16),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "Select your fitness experience level.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
 
               const SizedBox(height: 60),
 
               //////////////////////////////////////////////////////
-              /// GENDER OPTIONS
+              /// OPTIONS
               //////////////////////////////////////////////////////
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildGenderCard(gender: "Male", icon: Icons.male),
-                  _buildGenderCard(gender: "Female", icon: Icons.female),
-                ],
-              ),
+              ...activityLevels.map((level) => _buildOption(level)),
 
               const Spacer(),
 
@@ -65,21 +82,22 @@ class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: selectedGender == null || _isLoading
+                  onPressed: selectedLevel == null || _isLoading
                       ? null
                       : () async {
                           setState(() => _isLoading = true);
 
                           try {
-                            await AuthService().saveGender(selectedGender!);
+                            await AuthService().saveActivityLevel(
+                              selectedLevel!,
+                            );
 
                             if (!mounted) return;
 
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const AgeSelectionScreen(),
+                                builder: (context) => const DashboardScreen(),
                               ),
                             );
                           } catch (e) {
@@ -119,48 +137,37 @@ class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
   }
 
   //////////////////////////////////////////////////////
-  /// GENDER CARD
+  /// OPTION BUILDER
   //////////////////////////////////////////////////////
 
-  Widget _buildGenderCard({required String gender, required IconData icon}) {
-    final bool isSelected = selectedGender == gender;
+  Widget _buildOption(String level) {
+    final bool isSelected = selectedLevel == level;
 
     return GestureDetector(
       onTap: () {
         setState(() {
-          selectedGender = gender;
+          selectedLevel = level;
         });
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        width: 130,
-        height: 160,
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(bottom: 25),
+        height: 65,
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFFD700) : const Color(0xFF1C1F26),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? const Color(0xFFFFD700) : Colors.transparent,
-            width: 2,
-          ),
+          color: isSelected
+              ? const Color(0xFFD4E157) // lime highlight
+              : Colors.white,
+          borderRadius: BorderRadius.circular(35),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 60,
-              color: isSelected ? Colors.black : const Color(0xFFFFD700),
+        child: Center(
+          child: Text(
+            level,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isSelected ? Colors.black : const Color(0xFF6C63FF),
             ),
-            const SizedBox(height: 15),
-            Text(
-              gender,
-              style: TextStyle(
-                color: isSelected ? Colors.black : Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

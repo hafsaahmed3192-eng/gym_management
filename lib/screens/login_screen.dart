@@ -1,10 +1,31 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gym_management/screens/dashboard_screen.dart';
+import 'package:gym_management/services/auth_service.dart';
 import 'signup_screen.dart';
 import 'forget_password.dart';
 import 'gender_selection_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final AuthService _authService = AuthService();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool _isLoading = false;
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +42,6 @@ class LoginScreen extends StatelessWidget {
                 //////////////////////////////////////////////////////
                 /// LOGO
                 //////////////////////////////////////////////////////
-
                 const Icon(
                   Icons.fitness_center,
                   size: 80,
@@ -33,7 +53,6 @@ class LoginScreen extends StatelessWidget {
                 //////////////////////////////////////////////////////
                 /// APP NAME
                 //////////////////////////////////////////////////////
-
                 RichText(
                   text: const TextSpan(
                     children: [
@@ -75,10 +94,10 @@ class LoginScreen extends StatelessWidget {
                 //////////////////////////////////////////////////////
                 /// USERNAME FIELD
                 //////////////////////////////////////////////////////
-
                 _buildTextField(
-                  hint: "Username",
-                  icon: Icons.person,
+                  controller: _emailController,
+                  hint: "Email",
+                  icon: Icons.email,
                   obscure: false,
                 ),
 
@@ -87,8 +106,8 @@ class LoginScreen extends StatelessWidget {
                 //////////////////////////////////////////////////////
                 /// PASSWORD FIELD
                 //////////////////////////////////////////////////////
-
                 _buildTextField(
+                  controller: _passwordController,
                   hint: "Password",
                   icon: Icons.lock,
                   obscure: true,
@@ -99,18 +118,81 @@ class LoginScreen extends StatelessWidget {
                 //////////////////////////////////////////////////////
                 /// LOGIN BUTTON
                 //////////////////////////////////////////////////////
-
                 SizedBox(
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const GenderSelectionScreen(),
-                        ),
-                      );
+                    onPressed: () async {
+                      if (_emailController.text.isEmpty ||
+                          _passwordController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Please enter email and password"),
+                          ),
+                        );
+                        return;
+                      }
+
+                      setState(() => _isLoading = true);
+
+                      try {
+                        await _authService.login(
+                          email: _emailController.text.trim(),
+                          password: _passwordController.text.trim(),
+                        );
+
+                        if (!mounted) return;
+
+                        final user = FirebaseAuth.instance.currentUser;
+
+                        if (user == null) {
+                          throw Exception("Login failed");
+                        }
+
+                        final userDoc = await FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(user.uid)
+                            .get();
+
+                        if (!userDoc.exists) {
+                          throw Exception("User data not found in Firestore");
+                        }
+
+                        final data = userDoc.data();
+
+                        if (data?['gender'] == null) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const GenderSelectionScreen(),
+                            ),
+                          );
+                        } else {
+                          // ✅ IMPORTANT: Add your Dashboard here
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const DashboardScreen(), // temporary
+                              // change to DashboardScreen later
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        print("LOGIN ERROR: $e");
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Login failed: ${e.toString()}"),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+
+                      if (mounted) {
+                        setState(() => _isLoading = false);
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFD700),
@@ -119,13 +201,15 @@ class LoginScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.black)
+                        : const Text(
+                            "Login",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
 
@@ -134,7 +218,6 @@ class LoginScreen extends StatelessWidget {
                 //////////////////////////////////////////////////////
                 /// FORGOT PASSWORD
                 //////////////////////////////////////////////////////
-
                 TextButton(
                   onPressed: () {
                     Navigator.push(
@@ -156,7 +239,6 @@ class LoginScreen extends StatelessWidget {
                 //////////////////////////////////////////////////////
                 /// SIGN UP OPTION
                 //////////////////////////////////////////////////////
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -189,18 +271,13 @@ class LoginScreen extends StatelessWidget {
                 //////////////////////////////////////////////////////
                 /// LOGIN WITH
                 //////////////////////////////////////////////////////
-
-                const Text(
-                  "Login with",
-                  style: TextStyle(color: Colors.grey),
-                ),
+                const Text("Login with", style: TextStyle(color: Colors.grey)),
 
                 const SizedBox(height: 20),
 
                 //////////////////////////////////////////////////////
                 /// SOCIAL ICONS
                 //////////////////////////////////////////////////////
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: const [
@@ -226,11 +303,13 @@ class LoginScreen extends StatelessWidget {
   //////////////////////////////////////////////////////
 
   Widget _buildTextField({
+    required TextEditingController controller,
     required String hint,
     required IconData icon,
     required bool obscure,
   }) {
     return TextField(
+      controller: controller,
       obscureText: obscure,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
@@ -263,10 +342,7 @@ class _SocialIcon extends StatelessWidget {
     return CircleAvatar(
       radius: 22,
       backgroundColor: const Color(0xFF1C1F26),
-      child: Icon(
-        icon,
-        color: const Color(0xFFFFD700),
-      ),
+      child: Icon(icon, color: const Color(0xFFFFD700)),
     );
   }
 }

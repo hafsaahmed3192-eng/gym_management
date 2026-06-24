@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "134608498816",
+    "project_id": "fusion-gym-357b4",
+    "storage_bucket": "fusion-gym-357b4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:134608498816:android:b9e2e86e19ddc755a77665",
+        "android_client_info": {
+          "package_name": "com.example.gym_management"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFj47YWvv97iRp6fj5R7CYkpmGHEbfRj4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
