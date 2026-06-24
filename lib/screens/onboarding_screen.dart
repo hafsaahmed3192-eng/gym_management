@@ -1,22 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../model/OnboardData.dart';
 import 'login_screen.dart';
 
-////////////////////////////////////////////////////////////
-/// MODEL CLASS
-////////////////////////////////////////////////////////////
 
-class OnboardModel {
-  final String image;
-  final String text;
-  final IconData icon;
 
-  OnboardModel({
-    required this.image,
-    required this.text,
-    required this.icon,
-  });
-}
 
 ////////////////////////////////////////////////////////////
 /// ONBOARDING SCREEN

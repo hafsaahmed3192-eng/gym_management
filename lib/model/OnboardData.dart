@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class OnboardData {
+class OnboardModel {
   final String image;
   final String text;
   final IconData icon;
 
-  OnboardData({
+  OnboardModel({
     required this.image,
     required this.text,
     required this.icon,
