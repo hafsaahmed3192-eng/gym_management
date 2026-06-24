@@ -40,7 +40,7 @@ class _GenderSelectionScreenState
               const SizedBox(height: 10),
 
               const Text(
-                "Select gender",
+                "Select your gender",
                 style: TextStyle(
                   color: Colors.grey,
                   fontSize: 16,
