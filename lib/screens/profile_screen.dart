@@ -187,7 +187,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ? FileImage(_imageFile!)
                     : (userData?['profileImage'] != null
                     ? NetworkImage(userData!['profileImage'])
-                    : null) ,
+                    : null) as ImageProvider?,
                 child: _imageFile == null && userData?['profileImage'] == null
                     ? const Icon(
                   Icons.add_a_photo,
