@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'profile_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -234,13 +235,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
           topRight: Radius.circular(25),
         ),
       ),
-      child: const Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Icon(Icons.home, color: Color(0xFFFFD700)),
-          Icon(Icons.bar_chart, color: Colors.grey),
-          Icon(Icons.star, color: Colors.grey),
-          Icon(Icons.person, color: Colors.grey),
+          const Icon(Icons.home, color: Color(0xFFFFD700)),
+
+          const Icon(Icons.bar_chart, color: Colors.grey),
+
+          const Icon(Icons.star, color: Colors.grey),
+
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ProfileScreen(),
+                ),
+              );
+            },
+            child: const Icon(Icons.person, color: Colors.grey),
+          ),
         ],
       ),
     );
