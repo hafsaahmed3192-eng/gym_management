@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/workout_model.dart';
+import 'active_workout_screen.dart';
 
 class WorkoutDetailsScreen extends StatefulWidget {
   final String workoutId;
@@ -173,8 +174,16 @@ class _WorkoutDetailsScreenState
                     height: 55,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Next: ActiveWorkoutScreen
-                      },
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) =>
+          ActiveWorkoutScreen(
+        workout: workout!,
+      ),
+    ),
+  );
+},
                       style:
                           ElevatedButton.styleFrom(
                         backgroundColor:

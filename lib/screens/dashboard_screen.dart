@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'profile_screen.dart';
 import 'workout_details_screen.dart';
-import '../models/workout_model.dart';
+import '../model/workout_model.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

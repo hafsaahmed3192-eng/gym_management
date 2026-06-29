@@ -37,6 +37,8 @@ dependencies:
   image_picker: ^1.0.7
   provider: ^6.1.2
   shared_preferences: ^2.2.3
+  audioplayers: ^5.2.1
+  vibration: ^1.8.4
 
 
 
@@ -70,6 +72,8 @@ flutter_launcher_icons:
 flutter:
   assets:
     - assets/images/
+    - assets/exercises/
+    - assets/sounds/
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
