@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+import 'article_screen.dart';
 import 'profile_screen.dart';
 import 'workout_details_screen.dart';
 import '../model/workout_model.dart';
@@ -12,13 +14,10 @@ class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() =>
-      _DashboardScreenState();
+  State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState
-    extends State<DashboardScreen> {
-
+class _DashboardScreenState extends State<DashboardScreen> {
   String userName = "Athlete";
   List<Workout> workouts = [];
   bool isLoadingWorkouts = true;
@@ -52,22 +51,18 @@ class _DashboardScreenState
   //////////////////////////////////////////////////////
 
   Future<void> _fetchUserName() async {
-    final user =
-        FirebaseAuth.instance.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) return;
 
-    final doc =
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
 
     if (doc.exists) {
       setState(() {
-        userName =
-            doc.data()?['name'] ??
-                "Athlete";
+        userName = doc.data()?['name'] ?? "Athlete";
       });
     }
   }
@@ -78,13 +73,10 @@ class _DashboardScreenState
 
   Future<void> _fetchWorkouts() async {
     final snapshot =
-        await FirebaseFirestore.instance
-            .collection('workouts')
-            .get();
+    await FirebaseFirestore.instance.collection('workouts').get();
 
     final data = snapshot.docs.map((doc) {
-      return Workout.fromFirestore(
-          doc.id, doc.data());
+      return Workout.fromFirestore(doc.id, doc.data());
     }).toList();
 
     setState(() {
@@ -105,19 +97,17 @@ class _DashboardScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0F14),
-      bottomNavigationBar: _buildBottomNav(),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      bottomNavigationBar: _buildBottomNav(theme),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding:
-              const EdgeInsets.symmetric(
-                  horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               //////////////////////////////////////////////////////
               /// HEADER
               //////////////////////////////////////////////////////
@@ -125,49 +115,35 @@ class _DashboardScreenState
               const SizedBox(height: 20),
 
               Row(
-                mainAxisAlignment:
-                    MainAxisAlignment
-                        .spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         "Hi, $userName 👋",
-                        style:
-                            const TextStyle(
-                          color: Color(
-                              0xFFFFD700),
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
                           fontSize: 22,
-                          fontWeight:
-                              FontWeight.bold,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(
-                          height: 5),
-                      const Text(
+                      const SizedBox(height: 5),
+                      Text(
                         "Push your limits today.",
                         style: TextStyle(
-                          color: Colors
-                              .grey,
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
                           fontSize: 14,
                         ),
                       ),
                     ],
                   ),
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.search,
-                          color: Color(
-                              0xFFFFD700)),
-                      SizedBox(width: 15),
-                      Icon(
-                          Icons
-                              .notifications,
-                          color: Color(
-                              0xFFFFD700)),
+                      Icon(Icons.search, color: theme.colorScheme.primary),
+                      const SizedBox(width: 15),
+                      Icon(Icons.notifications,
+                          color: theme.colorScheme.primary),
                     ],
                   ),
                 ],
@@ -191,31 +167,23 @@ class _DashboardScreenState
                 mainAxisAlignment:
                     MainAxisAlignment
                         .spaceBetween,
-                children: [
-                  const _QuickAction(
+                children: const [
+                  _QuickAction(
                       icon: Icons
                           .fitness_center,
                       label:
                           "Workout"),
                   _QuickAction(
                       icon:
-                          Icons.directions_walk,
-                      label: "Steps",
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const WalkHistoryScreen(),
-                          ),
-                        );
-                      }),
-                  const _QuickAction(
+                          Icons.show_chart,
+                      label:
+                          "Progress"),
+                  _QuickAction(
                       icon:
                           Icons.restaurant,
                       label:
                           "Nutrition"),
-                  const _QuickAction(
+                  _QuickAction(
                       icon:
                           Icons.people,
                       label:
@@ -230,27 +198,19 @@ class _DashboardScreenState
               //////////////////////////////////////////////////////
 
               Row(
-                mainAxisAlignment:
-                    MainAxisAlignment
-                        .spaceBetween,
-                children: const [
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
                   Text(
                     "Workouts",
                     style: TextStyle(
-                      color:
-                          Colors.white,
+                      color: theme.colorScheme.onSurface,
                       fontSize: 18,
-                      fontWeight:
-                          FontWeight
-                              .bold,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     "See All",
-                    style: TextStyle(
-                      color: Color(
-                          0xFFFFD700),
-                    ),
+                    style: TextStyle(color: theme.colorScheme.primary),
                   ),
                 ],
               ),
@@ -258,109 +218,71 @@ class _DashboardScreenState
               const SizedBox(height: 15),
 
               isLoadingWorkouts
-                  ? const Center(
-                      child:
-                          CircularProgressIndicator(
-                        color: Color(
-                            0xFFFFD700),
-                      ),
-                    )
+                  ? Center(
+                child: CircularProgressIndicator(
+                  color: theme.colorScheme.primary,
+                ),
+              )
                   : SizedBox(
-                      height: 200,
-                      child: ListView.builder(
-                        scrollDirection:
-                            Axis.horizontal,
-                        itemCount:
-                            workouts.length,
-                        itemBuilder:
-                            (context,
-                                index) {
-                          final workout =
-                              workouts[
-                                  index];
+                height: 200,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: workouts.length,
+                  itemBuilder: (context, index) {
+                    final workout = workouts[index];
 
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (_) =>
-                                          WorkoutDetailsScreen(
-                                    workoutId:
-                                        workout.id,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              width: 240,
-                              margin:
-                                  const EdgeInsets.only(
-                                      right:
-                                          15),
-                              padding:
-                                  const EdgeInsets.all(
-                                      16),
-                              decoration:
-                                  BoxDecoration(
-                                color:
-                                    const Color(
-                                        0xFF1C1F26),
-                                borderRadius:
-                                    BorderRadius.circular(
-                                        20),
-                              ),
-                              child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment
-                                        .start,
-                                children: [
-                                  Text(
-                                    workout
-                                        .name,
-                                    style:
-                                        const TextStyle(
-                                      color: Color(
-                                          0xFFFFD700),
-                                      fontWeight:
-                                          FontWeight
-                                              .bold,
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                      height:
-                                          6),
-                                  Text(
-                                    workout
-                                        .difficulty
-                                        .toUpperCase(),
-                                    style:
-                                        const TextStyle(
-                                      color: Colors
-                                          .grey,
-                                      fontSize:
-                                          12,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    formatTime(
-                                        workout
-                                            .estimatedTotalTime),
-                                    style:
-                                        const TextStyle(
-                                      color: Colors
-                                          .white,
-                                    ),
-                                  ),
-                                ],
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WorkoutDetailsScreen(
+                              workoutId: workout.id,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: 240,
+                        margin: const EdgeInsets.only(right: 15),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              workout.name,
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          );
-                        },
+                            const SizedBox(height: 6),
+                            Text(
+                              workout.difficulty.toUpperCase(),
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurface
+                                    .withOpacity(0.6),
+                                fontSize: 12,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              formatTime(workout.estimatedTotalTime),
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    );
+                  },
+                ),
+              ),
 
               const SizedBox(height: 30),
 
@@ -370,68 +292,42 @@ class _DashboardScreenState
 
               Container(
                 width: double.infinity,
-                padding:
-                    const EdgeInsets.all(
-                        20),
-                decoration:
-                    BoxDecoration(
-                  color: const Color(
-                      0xFF1C1F26),
-                  borderRadius:
-                      BorderRadius
-                          .circular(20),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment
-                                .start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             "Weekly Challenge",
-                            style:
-                                TextStyle(
-                              color: Color(
-                                  0xFFFFD700),
-                              fontSize:
-                                  18,
-                              fontWeight:
-                                  FontWeight
-                                      .bold,
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(
-                              height:
-                                  5),
+                          const SizedBox(height: 5),
                           Text(
                             "Plank 3x Everyday",
-                            style:
-                                TextStyle(
-                                    color:
-                                        Colors.white),
+                            style: TextStyle(color: theme.colorScheme.onSurface),
                           ),
                         ],
                       ),
                     ),
                     Container(
-                      padding:
-                          const EdgeInsets.all(
-                              10),
-                      decoration:
-                          const BoxDecoration(
-                        shape:
-                            BoxShape.circle,
-                        color: Color(
-                            0xFFFFD700),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: theme.colorScheme.primary,
                       ),
-                      child:
-                          const Icon(
-                        Icons
-                            .play_arrow,
-                        color:
-                            Colors.black,
+                      child: const Icon(
+                        Icons.play_arrow,
+                        color: Colors.black,
                       ),
                     ),
                   ],
@@ -504,44 +400,41 @@ class _DashboardScreenState
   /// BOTTOM NAV
   //////////////////////////////////////////////////////
 
-  Widget _buildBottomNav() {
+  Widget _buildBottomNav(ThemeData theme) {
     return Container(
       height: 70,
-      decoration: const BoxDecoration(
-        color: Color(0xFF1C1F26),
-        borderRadius:
-            BorderRadius.only(
-          topLeft:
-              Radius.circular(25),
-          topRight:
-              Radius.circular(25),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
         ),
       ),
       child: Row(
-        mainAxisAlignment:
-            MainAxisAlignment
-                .spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          const Icon(Icons.home,
-              color: Color(
-                  0xFFFFD700)),
-          const Icon(Icons.bar_chart,
-              color: Colors.grey),
-          const Icon(Icons.star,
-              color: Colors.grey),
+          Icon(Icons.home, color: theme.colorScheme.primary),
+          Icon(Icons.bar_chart,
+              color: theme.colorScheme.onSurface.withOpacity(0.5)),
           GestureDetector(
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      const ProfileScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const ArticlesScreen()),
               );
             },
-            child: const Icon(
-                Icons.person,
-                color: Colors.grey),
+            child: Icon(Icons.article,
+                color: theme.colorScheme.onSurface.withOpacity(0.5)),
+          ),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              );
+            },
+            child: Icon(Icons.person,
+                color: theme.colorScheme.onSurface.withOpacity(0.5)),
           ),
         ],
       ),
@@ -604,8 +497,7 @@ class _StatCard extends StatelessWidget {
 /// QUICK ACTION
 ////////////////////////////////////////////////////////////
 
-class _QuickAction
-    extends StatelessWidget {
+class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
@@ -613,43 +505,39 @@ class _QuickAction
   const _QuickAction({
     required this.icon,
     required this.label,
-    this.onTap,
   });
 
   @override
   Widget build(
       BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            padding:
-                const EdgeInsets.all(
-                    15),
-            decoration:
-                BoxDecoration(
+    return Column(
+      children: [
+        Container(
+          padding:
+              const EdgeInsets.all(
+                  15),
+          decoration:
+              BoxDecoration(
+            color:
+                const Color(
+                    0xFF1C1F26),
+            borderRadius:
+                BorderRadius
+                    .circular(
+                        15),
+          ),
+          child: Icon(icon,
               color:
                   const Color(
-                      0xFF1C1F26),
-              borderRadius:
-                  BorderRadius
-                      .circular(
-                          15),
-            ),
-            child: Icon(icon,
-                color:
-                    const Color(
-                        0xFFFFD700)),
-          ),
-          const SizedBox(height: 8),
-          Text(label,
-              style:
-                  const TextStyle(
-                      color:
-                          Colors.grey)),
-        ],
-      ),
+                      0xFFFFD700)),
+        ),
+        const SizedBox(height: 8),
+        Text(label,
+            style:
+                const TextStyle(
+                    color:
+                        Colors.grey)),
+      ],
     );
   }
 }

@@ -11,14 +11,18 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailPhoneController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _nameController =
+  TextEditingController();
+  final TextEditingController _emailController =
+  TextEditingController();
+  final TextEditingController _passwordController =
+  TextEditingController();
   final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
 
   //////////////////////////////////////////////////////
   /// PASSWORD VALIDATION
@@ -29,16 +33,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return "Password is required";
     }
     if (value.length < 8) {
-      return "Password must be at least 8 characters";
+      return "Must be at least 8 characters";
     }
     if (!RegExp(r'[A-Z]').hasMatch(value)) {
-      return "Must contain at least one uppercase letter";
+      return "Must contain one uppercase letter";
     }
     if (!RegExp(r'[0-9]').hasMatch(value)) {
-      return "Must contain at least one number";
+      return "Must contain one number";
     }
-    if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
-      return "Must contain at least one special character";
+    if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]')
+        .hasMatch(value)) {
+      return "Must contain one special character";
     }
     return null;
   }
@@ -49,16 +54,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0F14),
+      backgroundColor: theme.scaffoldBackgroundColor,
+
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D0F14),
-        iconTheme: const IconThemeData(color: Color(0xFFFFD700)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: IconThemeData(
+          color: theme.colorScheme.primary,
+        ),
       ),
+
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
+          padding:
+          const EdgeInsets.symmetric(horizontal: 30),
           child: Form(
             key: _formKey,
             child: Column(
@@ -66,15 +78,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 20),
 
                 //////////////////////////////////////////////////////
-                /// TITLE
-                //////////////////////////////////////////////////////
-                //////////////////////////////////////////////////////
                 /// LOGO
                 //////////////////////////////////////////////////////
-                const Icon(
+
+                Icon(
                   Icons.fitness_center,
                   size: 80,
-                  color: Color(0xFFFFD700),
+                  color: theme.colorScheme.primary,
                 ),
 
                 const SizedBox(height: 20),
@@ -82,13 +92,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 //////////////////////////////////////////////////////
                 /// APP NAME
                 //////////////////////////////////////////////////////
+
                 RichText(
-                  text: const TextSpan(
+                  text: TextSpan(
                     children: [
                       TextSpan(
                         text: "FUSION",
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : const Color(0xFF1A1A1A), // softer dark
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 2,
@@ -97,7 +110,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       TextSpan(
                         text: "GYM",
                         style: TextStyle(
-                          color: Color(0xFFFFD700),
+                          color: Theme.of(context).colorScheme.primary,
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 2,
@@ -108,55 +121,58 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
 
                 const SizedBox(height: 8),
-                const Text(
+
+                Text(
                   "Be an Inspiration",
                   style: TextStyle(
-                    color: Colors.grey,
+                    color: theme.colorScheme.onSurface
+                        .withOpacity(0.6),
                     fontSize: 16,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
 
-                const SizedBox(height: 50),
-                const Text(
+                const SizedBox(height: 40),
+
+                Text(
                   "SIGN UP",
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 26,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
-                const SizedBox(height: 10),
 
                 const SizedBox(height: 40),
 
                 //////////////////////////////////////////////////////
                 /// FULL NAME
                 //////////////////////////////////////////////////////
+
                 _buildTextField(
                   controller: _nameController,
                   hint: "Full Name",
                   icon: Icons.person,
                   validator: (value) =>
-                      value!.isEmpty ? "Full Name is required" : null,
+                  value == null || value.isEmpty
+                      ? "Full Name is required"
+                      : null,
                 ),
 
                 const SizedBox(height: 20),
 
                 //////////////////////////////////////////////////////
-                /// EMAIL OR MOBILE
+                /// EMAIL
                 //////////////////////////////////////////////////////
+
                 _buildTextField(
-                  controller: _emailPhoneController,
-                  hint: "Email or Mobile Number",
+                  controller: _emailController,
+                  hint: "Email",
                   icon: Icons.email,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "This field is required";
-                    }
-                    return null;
-                  },
+                  validator: (value) =>
+                  value == null || value.isEmpty
+                      ? "Email is required"
+                      : null,
                 ),
 
                 const SizedBox(height: 20),
@@ -164,6 +180,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 //////////////////////////////////////////////////////
                 /// PASSWORD
                 //////////////////////////////////////////////////////
+
                 _buildTextField(
                   controller: _passwordController,
                   hint: "Password",
@@ -175,11 +192,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       _obscurePassword
                           ? Icons.visibility
                           : Icons.visibility_off,
-                      color: const Color(0xFFFFD700),
+                      color:
+                      theme.colorScheme.primary,
                     ),
                     onPressed: () {
                       setState(() {
-                        _obscurePassword = !_obscurePassword;
+                        _obscurePassword =
+                        !_obscurePassword;
                       });
                     },
                   ),
@@ -190,14 +209,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 //////////////////////////////////////////////////////
                 /// CONFIRM PASSWORD
                 //////////////////////////////////////////////////////
+
                 _buildTextField(
-                  controller: _confirmPasswordController,
+                  controller:
+                  _confirmPasswordController,
                   hint: "Confirm Password",
                   icon: Icons.lock_outline,
                   obscure: _obscureConfirmPassword,
                   validator: (value) {
-                    if (value != _passwordController.text) {
-                      return "Passwords do not match";
+                    if (value !=
+                        _passwordController.text) {
+                      return
+                        "Passwords do not match";
                     }
                     return null;
                   },
@@ -206,11 +229,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       _obscureConfirmPassword
                           ? Icons.visibility
                           : Icons.visibility_off,
-                      color: const Color(0xFFFFD700),
+                      color:
+                      theme.colorScheme.primary,
                     ),
                     onPressed: () {
                       setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
+                        _obscureConfirmPassword =
+                        !_obscureConfirmPassword;
                       });
                     },
                   ),
@@ -221,51 +246,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 //////////////////////////////////////////////////////
                 /// SIGN UP BUTTON
                 //////////////////////////////////////////////////////
+
                 SizedBox(
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        try {
-                          await AuthService().signUp(
-                            name: _nameController.text.trim(),
-                            email: _emailPhoneController.text.trim(),
-                            password: _passwordController.text.trim(),
-                          );
-
-                          if (!mounted) return;
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Account Created Successfully ✅"),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-
-                          // Wait 1 second so user can see message
-                          await Future.delayed(const Duration(seconds: 1));
-
-                          Navigator.pop(context); // Goes back to Login
-                        } catch (e) {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(e.toString())));
-                        }
-                      }
-                    },
+                    onPressed:
+                    _isLoading ? null : _signUp,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFD700),
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                      backgroundColor:
+                      theme.colorScheme.primary,
+                      foregroundColor:
+                      Colors.black,
+                      shape:
+                      RoundedRectangleBorder(
+                        borderRadius:
+                        BorderRadius.circular(
+                            30),
                       ),
                     ),
-                    child: const Text(
+                    child: _isLoading
+                        ? const CircularProgressIndicator(
+                      color: Colors.black,
+                    )
+                        : const Text(
                       "Sign Up",
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontWeight:
+                        FontWeight.bold,
                       ),
                     ),
                   ),
@@ -274,24 +283,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 30),
 
                 //////////////////////////////////////////////////////
-                /// ALREADY HAVE ACCOUNT? LOGIN
+                /// LOGIN OPTION
                 //////////////////////////////////////////////////////
+
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment:
+                  MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       "Already have an account? ",
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: theme.colorScheme
+                            .onSurface
+                            .withOpacity(0.6),
+                      ),
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.pop(context); // Goes back to Login screen
+                        Navigator.pop(context);
                       },
-                      child: const Text(
+                      child: Text(
                         "Login",
                         style: TextStyle(
-                          color: Color(0xFFFFD700),
-                          fontWeight: FontWeight.bold,
+                          color: theme
+                              .colorScheme.primary,
+                          fontWeight:
+                          FontWeight.bold,
                         ),
                       ),
                     ),
@@ -308,6 +325,51 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   //////////////////////////////////////////////////////
+  /// SIGN UP LOGIC
+  //////////////////////////////////////////////////////
+
+  Future<void> _signUp() async {
+    if (!_formKey.currentState!.validate())
+      return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await AuthService().signUp(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password:
+        _passwordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content:
+          Text("Account Created Successfully ✅"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      await Future.delayed(
+          const Duration(seconds: 1));
+
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  //////////////////////////////////////////////////////
   /// REUSABLE TEXTFIELD
   //////////////////////////////////////////////////////
 
@@ -319,20 +381,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
     Widget? suffix,
     required String? Function(String?) validator,
   }) {
+    final theme = Theme.of(context);
+
     return TextFormField(
       controller: controller,
       obscureText: obscure,
       validator: validator,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(
+        color: theme.colorScheme.onSurface,
+      ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Colors.grey),
-        prefixIcon: Icon(icon, color: const Color(0xFFFFD700)),
+        hintStyle: TextStyle(
+          color: theme.colorScheme.onSurface
+              .withOpacity(0.6),
+        ),
+        prefixIcon: Icon(
+          icon,
+          color: theme.colorScheme.primary,
+        ),
         suffixIcon: suffix,
         filled: true,
-        fillColor: const Color(0xFF1C1F26),
+        fillColor: theme.cardColor,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius:
+          BorderRadius.circular(30),
           borderSide: BorderSide.none,
         ),
       ),

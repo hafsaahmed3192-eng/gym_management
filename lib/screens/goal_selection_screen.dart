@@ -22,8 +22,10 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0F14),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -34,10 +36,10 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD700)),
-                label: const Text(
+                icon: Icon(Icons.arrow_back, color: theme.colorScheme.primary),
+                label: Text(
                   "Back",
-                  style: TextStyle(color: Color(0xFFFFD700)),
+                  style: TextStyle(color: theme.colorScheme.primary),
                 ),
               ),
             ),
@@ -47,10 +49,10 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> {
             //////////////////////////////////////////////////////
             /// TITLE
             //////////////////////////////////////////////////////
-            const Text(
+            Text(
               "What Is Your Goal?",
               style: TextStyle(
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
               ),
@@ -58,12 +60,14 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> {
 
             const SizedBox(height: 10),
 
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Text(
                 "This helps us customize your workout and diet plan.",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
               ),
             ),
 
@@ -79,9 +83,9 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> {
                   horizontal: 25,
                   vertical: 30,
                 ),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF6C63FF),
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C63FF),
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(25),
                     topRight: Radius.circular(25),
                   ),
@@ -131,15 +135,15 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> {
                               ),
                               child: isSelected
                                   ? Center(
-                                      child: Container(
-                                        width: 14,
-                                        height: 14,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Color(0xFFFFD700),
-                                        ),
-                                      ),
-                                    )
+                                child: Container(
+                                  width: 14,
+                                  height: 14,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              )
                                   : null,
                             ),
                           ],
@@ -186,7 +190,7 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFD700),
+                    backgroundColor: theme.colorScheme.primary,
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),

@@ -17,8 +17,10 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0F14),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -33,10 +35,11 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD700)),
-                  label: const Text(
+                  icon: Icon(Icons.arrow_back,
+                      color: theme.colorScheme.primary),
+                  label: Text(
                     "Back",
-                    style: TextStyle(color: Color(0xFFFFD700)),
+                    style: TextStyle(color: theme.colorScheme.primary),
                   ),
                 ),
               ),
@@ -46,10 +49,10 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
               //////////////////////////////////////////////////////
               /// TITLE
               //////////////////////////////////////////////////////
-              const Text(
+              Text(
                 "Physical Activity Level",
                 style: TextStyle(
-                  color: Colors.white,
+                  color: theme.colorScheme.onSurface,
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
                 ),
@@ -57,12 +60,14 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
 
               const SizedBox(height: 10),
 
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
                   "Select your fitness experience level.",
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  ),
                 ),
               ),
 
@@ -71,7 +76,7 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
               //////////////////////////////////////////////////////
               /// OPTIONS
               //////////////////////////////////////////////////////
-              ...activityLevels.map((level) => _buildOption(level)),
+              ...activityLevels.map((level) => _buildOption(level, theme)),
 
               const Spacer(),
 
@@ -85,33 +90,33 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
                   onPressed: selectedLevel == null || _isLoading
                       ? null
                       : () async {
-                          setState(() => _isLoading = true);
+                    setState(() => _isLoading = true);
 
-                          try {
-                            await AuthService().saveActivityLevel(
-                              selectedLevel!,
-                            );
+                    try {
+                      await AuthService().saveActivityLevel(
+                        selectedLevel!,
+                      );
 
-                            if (!mounted) return;
+                      if (!mounted) return;
 
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const DashboardScreen(),
-                              ),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(e.toString())),
-                            );
-                          }
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DashboardScreen(),
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(e.toString())),
+                      );
+                    }
 
-                          setState(() => _isLoading = false);
-                        },
+                    setState(() => _isLoading = false);
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFD700),
+                    backgroundColor: theme.colorScheme.primary,
                     foregroundColor: Colors.black,
-                    disabledBackgroundColor: Colors.grey.shade800,
+                    disabledBackgroundColor: theme.cardColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
@@ -119,12 +124,12 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.black)
                       : const Text(
-                          "Continue",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                    "Continue",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
 
@@ -140,7 +145,7 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
   /// OPTION BUILDER
   //////////////////////////////////////////////////////
 
-  Widget _buildOption(String level) {
+  Widget _buildOption(String level, ThemeData theme) {
     final bool isSelected = selectedLevel == level;
 
     return GestureDetector(
@@ -156,7 +161,7 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? const Color(0xFFD4E157) // lime highlight
-              : Colors.white,
+              : theme.cardColor,
           borderRadius: BorderRadius.circular(35),
         ),
         child: Center(
@@ -165,7 +170,9 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.black : const Color(0xFF6C63FF),
+              color: isSelected
+                  ? Colors.black
+                  : theme.colorScheme.onSurface,
             ),
           ),
         ),
