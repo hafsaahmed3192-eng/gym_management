@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:gym_management/screens/dashboard_screen.dart';
+import 'package:gym_management/screens/video_topic.dart';
+import 'package:gym_management/screens/youtube_launcher.dart';
 import '../model/article_model.dart';
 
 import 'article_services.dart';
@@ -50,10 +53,7 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
     }
   }
 
-  List<ArticleModel> get filteredArticles {
-    if (selectedFilter == "All") return _articles;
-    return _articles.where((a) => a.type == selectedFilter).toList();
-  }
+  List<ArticleModel> get filteredArticles => _articles;
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +104,10 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
                         color: theme.colorScheme.primary,
                       ),
                       const SizedBox(width: 15),
-
+                      Icon(
+                        Icons.account_circle,
+                        color: theme.colorScheme.primary,
+                      ),
                     ],
                   ),
                 ],
@@ -149,6 +152,10 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
   }
 
   Widget _buildContent(ThemeData theme) {
+    if (selectedFilter == "Video") {
+      return _buildVideoTopicList(theme);
+    }
+
     if (_isLoading) {
       return Center(
         child: CircularProgressIndicator(color: theme.colorScheme.primary),
@@ -196,6 +203,110 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
         },
       ),
     );
+  }
+
+  //////////////////////////////////////////////////////
+  /// VIDEO TOPICS LIST (opens YouTube search per topic)
+  //////////////////////////////////////////////////////
+  Widget _buildVideoTopicList(ThemeData theme) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      itemCount: videoTopics.length,
+      itemBuilder: (context, index) {
+        final topic = videoTopics[index];
+        return _buildVideoTopicCard(topic, theme);
+      },
+    );
+  }
+
+  Widget _buildVideoTopicCard(VideoTopic topic, ThemeData theme) {
+    return GestureDetector(
+      onTap: () {
+        YoutubeLauncher.searchAndOpen(
+          context,
+          query: topic.searchQuery,
+          title: topic.title,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _iconFor(topic.iconName),
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    topic.title,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    topic.subtitle,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.play_circle_fill,
+              color: theme.colorScheme.primary,
+              size: 32,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _iconFor(String name) {
+    switch (name) {
+      case "fitness_center":
+        return Icons.fitness_center;
+      case "school":
+        return Icons.school;
+      case "bolt":
+        return Icons.bolt;
+      case "home":
+        return Icons.home;
+      case "sports_gymnastics":
+        return Icons.sports_gymnastics;
+      case "directions_run":
+        return Icons.directions_run;
+      case "accessibility_new":
+        return Icons.accessibility_new;
+      case "self_improvement":
+        return Icons.self_improvement;
+      case "favorite":
+        return Icons.favorite;
+      default:
+        return Icons.play_circle_outline;
+    }
   }
 
   //////////////////////////////////////////////////////
@@ -357,7 +468,18 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Icon(Icons.home, color: theme.colorScheme.onSurface.withOpacity(0.5)),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DashboardScreen()),
+              );
+            },
+            child: Icon(
+              Icons.home,
+              color: theme.colorScheme.onSurface.withOpacity(0.5),
+            ),
+          ),
           Icon(
             Icons.bar_chart,
             color: theme.colorScheme.onSurface.withOpacity(0.5),

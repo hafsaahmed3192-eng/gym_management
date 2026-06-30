@@ -11,6 +11,15 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
+    <!-- Needed so url_launcher can detect/launch installed apps (e.g. YouTube)
+         and the browser on Android 11+ (API 30+) -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
+
     <application
         android:label="yourapp"
         android:icon="@mipmap/ic_launcher"

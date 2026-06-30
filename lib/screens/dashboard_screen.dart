@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'article_screen.dart';
+import 'nutrition_screen.dart';
 import 'profile_screen.dart';
 import 'workout_details_screen.dart';
 import '../model/workout_model.dart';
@@ -23,10 +24,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool isLoadingWorkouts = true;
 
   final DashboardStatsService _statsService =
-      DashboardStatsService();
+  DashboardStatsService();
 
   final StepTrackingService _stepService =
-      StepTrackingService();
+  StepTrackingService();
 
   @override
   void initState() {
@@ -165,29 +166,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               Row(
                 mainAxisAlignment:
-                    MainAxisAlignment
-                        .spaceBetween,
-                children: const [
-                  _QuickAction(
+                MainAxisAlignment
+                    .spaceBetween,
+                children: [
+                  const _QuickAction(
                       icon: Icons
                           .fitness_center,
                       label:
-                          "Workout"),
+                      "Workout"),
+                  const _QuickAction(
+                      icon:
+                      Icons.show_chart,
+                      label:
+                      "Progress"),
                   _QuickAction(
                       icon:
-                          Icons.show_chart,
+                      Icons.restaurant,
                       label:
-                          "Progress"),
-                  _QuickAction(
+                      "Nutrition",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NutritionScreen(),
+                          ),
+                        );
+                      }),
+                  const _QuickAction(
                       icon:
-                          Icons.restaurant,
+                      Icons.people,
                       label:
-                          "Nutrition"),
-                  _QuickAction(
-                      icon:
-                          Icons.people,
-                      label:
-                          "Community"),
+                      "Community"),
                 ],
               ),
 
@@ -379,7 +388,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (_) =>
-                          const WalkHistoryScreen(),
+                      const WalkHistoryScreen(),
                     ),
                   );
                 },
@@ -500,31 +509,35 @@ class _StatCard extends StatelessWidget {
 class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
-  const _QuickAction({required this.icon, required this.label});
+  const _QuickAction({required this.icon, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(15),
-          decoration: BoxDecoration(
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(15),
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(icon, color: theme.colorScheme.primary),
           ),
-          child: Icon(icon, color: theme.colorScheme.primary),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
