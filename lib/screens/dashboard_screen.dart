@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'profile_screen.dart';
 import 'workout_details_screen.dart';
 import '../model/workout_model.dart';
+import '../services/dashboard_stats_service.dart';
+import '../services/step_tracking_service.dart';
+import 'walk_history_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -20,11 +23,28 @@ class _DashboardScreenState
   List<Workout> workouts = [];
   bool isLoadingWorkouts = true;
 
+  final DashboardStatsService _statsService =
+      DashboardStatsService();
+
+  final StepTrackingService _stepService =
+      StepTrackingService();
+
   @override
   void initState() {
     super.initState();
     _fetchUserName();
     _fetchWorkouts();
+
+    // Starts listening to the phone's step sensor
+    // automatically — no manual start button needed.
+    // Requests ACTIVITY_RECOGNITION permission on first run.
+    _stepService.initialize();
+  }
+
+  @override
+  void dispose() {
+    _stepService.dispose();
+    super.dispose();
   }
 
   //////////////////////////////////////////////////////
@@ -153,6 +173,14 @@ class _DashboardScreenState
                 ],
               ),
 
+              const SizedBox(height: 25),
+
+              //////////////////////////////////////////////////////
+              /// TODAY'S STATS (NEW)
+              //////////////////////////////////////////////////////
+
+              _buildTodayStats(),
+
               const SizedBox(height: 30),
 
               //////////////////////////////////////////////////////
@@ -163,23 +191,31 @@ class _DashboardScreenState
                 mainAxisAlignment:
                     MainAxisAlignment
                         .spaceBetween,
-                children: const [
-                  _QuickAction(
+                children: [
+                  const _QuickAction(
                       icon: Icons
                           .fitness_center,
                       label:
                           "Workout"),
                   _QuickAction(
                       icon:
-                          Icons.show_chart,
-                      label:
-                          "Progress"),
-                  _QuickAction(
+                          Icons.directions_walk,
+                      label: "Steps",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const WalkHistoryScreen(),
+                          ),
+                        );
+                      }),
+                  const _QuickAction(
                       icon:
                           Icons.restaurant,
                       label:
                           "Nutrition"),
-                  _QuickAction(
+                  const _QuickAction(
                       icon:
                           Icons.people,
                       label:
@@ -411,6 +447,60 @@ class _DashboardScreenState
   }
 
   //////////////////////////////////////////////////////
+  /// TODAY'S STATS WIDGET (NEW)
+  //////////////////////////////////////////////////////
+
+  Widget _buildTodayStats() {
+    return StreamBuilder<DashboardStats>(
+      stream: _statsService.watchTodayStats(),
+      builder: (context, snapshot) {
+        final stats =
+            snapshot.data ?? DashboardStats.empty();
+
+        return Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                icon: Icons.fitness_center,
+                value: '${stats.exercisesToday}',
+                label: 'Exercises',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                icon: Icons.local_fire_department,
+                value: stats.caloriesBurnedToday
+                    .toStringAsFixed(0),
+                label: 'Calories',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const WalkHistoryScreen(),
+                    ),
+                  );
+                },
+                child: _StatCard(
+                  icon: Icons.directions_walk,
+                  value: '${stats.stepsToday}',
+                  label: 'Steps',
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  //////////////////////////////////////////////////////
   /// BOTTOM NAV
   //////////////////////////////////////////////////////
 
@@ -460,6 +550,57 @@ class _DashboardScreenState
 }
 
 ////////////////////////////////////////////////////////////
+/// STAT CARD (NEW)
+////////////////////////////////////////////////////////////
+
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+
+  const _StatCard({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          vertical: 16, horizontal: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1F26),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Icon(icon,
+              color: const Color(0xFFFFD700),
+              size: 22),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+                color: Colors.grey, fontSize: 11),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+////////////////////////////////////////////////////////////
 /// QUICK ACTION
 ////////////////////////////////////////////////////////////
 
@@ -467,43 +608,48 @@ class _QuickAction
     extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
   const _QuickAction({
     required this.icon,
     required this.label,
+    this.onTap,
   });
 
   @override
   Widget build(
       BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          padding:
-              const EdgeInsets.all(
-                  15),
-          decoration:
-              BoxDecoration(
-            color:
-                const Color(
-                    0xFF1C1F26),
-            borderRadius:
-                BorderRadius
-                    .circular(
-                        15),
-          ),
-          child: Icon(icon,
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding:
+                const EdgeInsets.all(
+                    15),
+            decoration:
+                BoxDecoration(
               color:
                   const Color(
-                      0xFFFFD700)),
-        ),
-        const SizedBox(height: 8),
-        Text(label,
-            style:
-                const TextStyle(
-                    color:
-                        Colors.grey)),
-      ],
+                      0xFF1C1F26),
+              borderRadius:
+                  BorderRadius
+                      .circular(
+                          15),
+            ),
+            child: Icon(icon,
+                color:
+                    const Color(
+                        0xFFFFD700)),
+          ),
+          const SizedBox(height: 8),
+          Text(label,
+              style:
+                  const TextStyle(
+                      color:
+                          Colors.grey)),
+        ],
+      ),
     );
   }
 }
