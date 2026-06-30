@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:vibration/vibration.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../model/workout_model.dart';
@@ -59,11 +58,7 @@ class _ActiveWorkoutScreenState
   /// START REST
   //////////////////////////////////////////////////////
 
-  void startRest() async {
-    if (await Vibration.hasVibrator() ?? false) {
-      Vibration.vibrate(duration: 300);
-    }
-
+  void startRest() {
     setState(() {
       isResting = true;
       remainingSeconds = currentExercise.rest;
@@ -74,7 +69,7 @@ class _ActiveWorkoutScreenState
   }
 
   //////////////////////////////////////////////////////
-  /// TIMER
+  /// TIMER LOGIC
   //////////////////////////////////////////////////////
 
   void startTimer() {
@@ -88,7 +83,7 @@ class _ActiveWorkoutScreenState
             remainingSeconds--;
 
             if (!isResting) {
-              caloriesBurned += 0.12; // basic estimation
+              caloriesBurned += 0.12; // estimation
             }
           });
         } else {
@@ -111,7 +106,7 @@ class _ActiveWorkoutScreenState
   }
 
   //////////////////////////////////////////////////////
-  /// NEXT STEP
+  /// NEXT STEP LOGIC
   //////////////////////////////////////////////////////
 
   void nextStep() {
@@ -127,7 +122,7 @@ class _ActiveWorkoutScreenState
   }
 
   //////////////////////////////////////////////////////
-  /// NEXT EXERCISE
+  /// MOVE TO NEXT EXERCISE
   //////////////////////////////////////////////////////
 
   void moveToNextExercise() {
@@ -143,7 +138,7 @@ class _ActiveWorkoutScreenState
   }
 
   //////////////////////////////////////////////////////
-  /// SAVE HISTORY
+  /// SAVE WORKOUT HISTORY
   //////////////////////////////////////////////////////
 
   Future<void> saveWorkoutHistory() async {
@@ -163,7 +158,7 @@ class _ActiveWorkoutScreenState
   }
 
   //////////////////////////////////////////////////////
-  /// COMPLETION
+  /// COMPLETION DIALOG
   //////////////////////////////////////////////////////
 
   void showCompletion() async {
@@ -209,101 +204,165 @@ class _ActiveWorkoutScreenState
   /// UI
   //////////////////////////////////////////////////////
 
-  @override
-  Widget build(BuildContext context) {
+@override
+Widget build(BuildContext context) {
 
-    double progress = totalPhaseSeconds == 0
-        ? 0
-        : remainingSeconds / totalPhaseSeconds;
+  double progress = totalPhaseSeconds == 0
+      ? 0
+      : 1 - (remainingSeconds / totalPhaseSeconds);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0D0F14),
-      body: SafeArea(
-        child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center,
-          children: [
+  return Scaffold(
+    backgroundColor: const Color(0xFF0D0F14),
+    body: SafeArea(
+      child: Center(   // ✅ IMPORTANT
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center, // ✅ IMPORTANT
+            children: [
 
-            //////////////////////////////////////////////////////
-            /// EXERCISE GIF
-            //////////////////////////////////////////////////////
+              //////////////////////////////////////////////////////
+              /// EXERCISE IMAGE
+              //////////////////////////////////////////////////////
 
-            if (!isResting)
-              Image.asset(
-                "assets/exercises/${currentExercise.exerciseId}.gif",
-                height: 200,
-              )
-            else
-              const Icon(
-                Icons.hotel,
-                size: 120,
-                color: Color(0xFFFFD700),
+              if (!isResting)
+                Image.asset(
+                  "assets/exercises/${currentExercise.exerciseId}.gif",
+                  height: 220,
+                  errorBuilder: (_, __, ___) =>
+                      const Icon(
+                    Icons.fitness_center,
+                    size: 140,
+                    color: Color(0xFFFFD700),
+                  ),
+                )
+              else
+                const Icon(
+                  Icons.hotel,
+                  size: 140,
+                  color: Color(0xFFFFD700),
+                ),
+
+              const SizedBox(height: 30),
+
+              //////////////////////////////////////////////////////
+              /// TITLE
+              //////////////////////////////////////////////////////
+
+              Text(
+                isResting
+                    ? "REST"
+                    : currentExercise.exerciseId
+                        .replaceAll("_", " ")
+                        .toUpperCase(),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Color(0xFFFFD700),
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
 
-            const SizedBox(height: 30),
+              const SizedBox(height: 40),
 
-            //////////////////////////////////////////////////////
-            /// TITLE
-            //////////////////////////////////////////////////////
+              //////////////////////////////////////////////////////
+              /// BIG CIRCULAR TIMER
+              //////////////////////////////////////////////////////
 
-            Text(
-              isResting
-                  ? "REST"
-                  : currentExercise.exerciseId
-                      .replaceAll("_", " ")
-                      .toUpperCase(),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFFFFD700),
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+              SizedBox(
+                width: 280,
+                height: 280,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+
+                    Container(
+                      width: 280,
+                      height: 280,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.grey.shade800,
+                          width: 14,
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(
+                      width: 280,
+                      height: 280,
+                      child: CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 14,
+                        backgroundColor: Colors.transparent,
+                        valueColor:
+                            const AlwaysStoppedAnimation(
+                          Color(0xFFFFD700),
+                        ),
+                      ),
+                    ),
+
+                    Text(
+                      "$remainingSeconds",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 72,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 40),
+              const SizedBox(height: 30),
 
-            //////////////////////////////////////////////////////
-            /// TIMER + PROGRESS
-            //////////////////////////////////////////////////////
+              Text(
+                "Calories: ${caloriesBurned.toStringAsFixed(1)} kcal",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                ),
+              ),
 
-            SizedBox(
-              width: 200,
-              height: 200,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    value: progress,
-                    strokeWidth: 8,
-                    backgroundColor: Colors.grey.shade800,
-                    valueColor:
-                        const AlwaysStoppedAnimation(
-                      Color(0xFFFFD700),
+              const SizedBox(height: 30),
+
+              //////////////////////////////////////////////////////
+              /// SKIP BUTTON
+              //////////////////////////////////////////////////////
+
+              SizedBox(
+                width: 200,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: () {
+                    timer?.cancel();
+                    nextStep();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        const Color(0xFFFFD700),
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(30),
                     ),
                   ),
-                  Text(
-                    "$remainingSeconds",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 50,
+                  child: const Text(
+                    "Skip",
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
-
-            const SizedBox(height: 30),
-
-            Text(
-              "Calories: ${caloriesBurned.toStringAsFixed(1)} kcal",
-              style: const TextStyle(
-                color: Colors.grey,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
