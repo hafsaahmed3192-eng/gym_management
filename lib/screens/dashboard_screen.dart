@@ -500,43 +500,30 @@ class _StatCard extends StatelessWidget {
 class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
-  final VoidCallback? onTap;
 
-  const _QuickAction({
-    required this.icon,
-    required this.label,
-  });
+  const _QuickAction({required this.icon, required this.label});
 
   @override
-  Widget build(
-      BuildContext context) {
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       children: [
         Container(
-          padding:
-              const EdgeInsets.all(
-                  15),
-          decoration:
-              BoxDecoration(
-            color:
-                const Color(
-                    0xFF1C1F26),
-            borderRadius:
-                BorderRadius
-                    .circular(
-                        15),
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(15),
           ),
-          child: Icon(icon,
-              color:
-                  const Color(
-                      0xFFFFD700)),
+          child: Icon(icon, color: theme.colorScheme.primary),
         ),
         const SizedBox(height: 8),
-        Text(label,
-            style:
-                const TextStyle(
-                    color:
-                        Colors.grey)),
+        Text(
+          label,
+          style: TextStyle(
+            color: theme.colorScheme.onSurface.withOpacity(0.6),
+          ),
+        ),
       ],
     );
   }

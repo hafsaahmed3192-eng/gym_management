@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-// import 'package:vibration/vibration.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../model/workout_model.dart';
@@ -15,10 +14,13 @@ class ActiveWorkoutScreen extends StatefulWidget {
   });
 
   @override
-  State<ActiveWorkoutScreen> createState() => _ActiveWorkoutScreenState();
+  State<ActiveWorkoutScreen> createState() =>
+      _ActiveWorkoutScreenState();
 }
 
-class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
+class _ActiveWorkoutScreenState
+    extends State<ActiveWorkoutScreen> {
+
   int currentIndex = 0;
   int remainingSeconds = 0;
   int totalPhaseSeconds = 0;
@@ -56,11 +58,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   /// START REST
   //////////////////////////////////////////////////////
 
-  void startRest() async {
-    // if (await Vibration.hasVibrator() ?? false) {
-    //   Vibration.vibrate(duration: 300);
-    // }
-
+  void startRest() {
     setState(() {
       isResting = true;
       remainingSeconds = currentExercise.rest;
@@ -79,13 +77,13 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
     timer = Timer.periodic(
       const Duration(seconds: 1),
-          (t) {
+      (t) {
         if (remainingSeconds > 0) {
           setState(() {
             remainingSeconds--;
 
             if (!isResting) {
-              caloriesBurned += 0.12; // basic estimation
+              caloriesBurned += 0.12;
             }
           });
         } else {
@@ -98,7 +96,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   }
 
   //////////////////////////////////////////////////////
-  /// PLAY SOUND
+  /// SOUND
   //////////////////////////////////////////////////////
 
   void playBeep() async {
@@ -128,7 +126,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   //////////////////////////////////////////////////////
 
   void moveToNextExercise() {
-    if (currentIndex < widget.workout.exercises.length - 1) {
+    if (currentIndex <
+        widget.workout.exercises.length - 1) {
       setState(() {
         currentIndex++;
       });
@@ -165,22 +164,19 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   void showCompletion() async {
     await saveWorkoutHistory();
 
-    final theme = Theme.of(context);
+    if (!mounted) return;
 
     showDialog(
       context: context,
-      barrierDismissible: false,
       builder: (_) => AlertDialog(
-        backgroundColor: theme.cardColor,
-        title: Text(
+        backgroundColor: const Color(0xFF1C1F26),
+        title: const Text(
           "Workout Completed 🎉",
-          style: TextStyle(color: theme.colorScheme.onSurface),
+          style: TextStyle(color: Colors.white),
         ),
         content: Text(
           "Calories Burned: ${caloriesBurned.toStringAsFixed(1)} kcal",
-          style: TextStyle(
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
-          ),
+          style: const TextStyle(color: Colors.grey),
         ),
         actions: [
           TextButton(
@@ -188,9 +184,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: Text(
+            child: const Text(
               "Done",
-              style: TextStyle(color: theme.colorScheme.primary),
+              style: TextStyle(color: Color(0xFFFFD700)),
             ),
           )
         ],
@@ -211,94 +207,164 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
 
-    double progress =
-    totalPhaseSeconds == 0 ? 0 : remainingSeconds / totalPhaseSeconds;
+    double progress = totalPhaseSeconds == 0
+        ? 0
+        : 1 - (remainingSeconds / totalPhaseSeconds);
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFF0D0F14),
       body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            //////////////////////////////////////////////////////
-            /// EXERCISE GIF
-            //////////////////////////////////////////////////////
+        child: Center(
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              mainAxisAlignment:
+                  MainAxisAlignment.center,
+              crossAxisAlignment:
+                  CrossAxisAlignment.center,
+              children: [
 
-            if (!isResting)
-              Image.asset(
-                "assets/exercises/${currentExercise.exerciseId}.gif",
-                height: 200,
-              )
-            else
-              Icon(
-                Icons.hotel,
-                size: 120,
-                color: theme.colorScheme.primary,
-              ),
+                //////////////////////////////////////////////////////
+                /// GIF OR ICON
+                //////////////////////////////////////////////////////
 
-            const SizedBox(height: 30),
+                if (!isResting)
+                  Image.asset(
+                    "assets/exercises/${currentExercise.exerciseId}.gif",
+                    height: 220,
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(
+                      Icons.fitness_center,
+                      size: 140,
+                      color: Color(0xFFFFD700),
+                    ),
+                  )
+                else
+                  const Icon(
+                    Icons.hotel,
+                    size: 140,
+                    color: Color(0xFFFFD700),
+                  ),
 
-            //////////////////////////////////////////////////////
-            /// TITLE
-            //////////////////////////////////////////////////////
+                const SizedBox(height: 30),
 
-            Text(
-              isResting
-                  ? "REST"
-                  : currentExercise.exerciseId
-                  .replaceAll("_", " ")
-                  .toUpperCase(),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: theme.colorScheme.primary,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+                //////////////////////////////////////////////////////
+                /// TITLE
+                //////////////////////////////////////////////////////
 
-            const SizedBox(height: 40),
+                Text(
+                  isResting
+                      ? "REST"
+                      : currentExercise.exerciseId
+                          .replaceAll("_", " ")
+                          .toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFFFFD700),
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
 
-            //////////////////////////////////////////////////////
-            /// TIMER + PROGRESS
-            //////////////////////////////////////////////////////
+                const SizedBox(height: 40),
 
-            SizedBox(
-              width: 200,
-              height: 200,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    value: progress,
-                    strokeWidth: 8,
-                    backgroundColor: theme.cardColor,
-                    valueColor: AlwaysStoppedAnimation(
-                      theme.colorScheme.primary,
+                //////////////////////////////////////////////////////
+                /// BIG CIRCLE TIMER
+                //////////////////////////////////////////////////////
+
+                SizedBox(
+                  width: 280,
+                  height: 280,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+
+                      Container(
+                        width: 280,
+                        height: 280,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.grey.shade800,
+                            width: 14,
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(
+                        width: 280,
+                        height: 280,
+                        child: CircularProgressIndicator(
+                          value: progress,
+                          strokeWidth: 14,
+                          backgroundColor:
+                              Colors.transparent,
+                          valueColor:
+                              const AlwaysStoppedAnimation(
+                            Color(0xFFFFD700),
+                          ),
+                        ),
+                      ),
+
+                      Text(
+                        "$remainingSeconds",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 72,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                Text(
+                  "Calories: ${caloriesBurned.toStringAsFixed(1)} kcal",
+                  style: const TextStyle(
+                    color: Colors.grey,
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                //////////////////////////////////////////////////////
+                /// SKIP BUTTON
+                //////////////////////////////////////////////////////
+
+                SizedBox(
+                  width: 200,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      timer?.cancel();
+                      nextStep();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          const Color(0xFFFFD700),
+                      foregroundColor:
+                          Colors.black,
+                      shape:
+                          RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: const Text(
+                      "Skip",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  Text(
-                    "$remainingSeconds",
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontSize: 50,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-
-            const SizedBox(height: 30),
-
-            Text(
-              "Calories: ${caloriesBurned.toStringAsFixed(1)} kcal",
-              style: TextStyle(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
