@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import '../model/OnboardData.dart';
 import 'login_screen.dart';
 
-
-
-
 ////////////////////////////////////////////////////////////
 /// ONBOARDING SCREEN
 ////////////////////////////////////////////////////////////
@@ -18,7 +15,6 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-
   final PageController _controller = PageController();
   int currentIndex = 0;
 
@@ -60,10 +56,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
-
           ////////////////////////////////////////////////////////////
           /// PAGE VIEW
           ////////////////////////////////////////////////////////////
@@ -77,20 +75,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               });
             },
             itemBuilder: (context, index) {
-
               final slide = slides[index];
 
               return Stack(
                 fit: StackFit.expand,
                 children: [
-
                   // ✅ Background Image
                   Image.asset(
                     slide.image,
                     fit: BoxFit.cover,
                   ),
 
-                  // ✅ Dark Overlay
+                  // ✅ Dark Overlay (kept regardless of theme — needed for
+                  // text legibility over photos)
                   Container(
                     color: Colors.black.withOpacity(0.6),
                   ),
@@ -102,19 +99,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-
                       Container(
                         padding: const EdgeInsets.all(40),
                         margin: const EdgeInsets.symmetric(horizontal: 1),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF5E0B15).withOpacity(0.85), // Maroon Card
-                          //borderRadius: BorderRadius.circular(20),
+                          color: const Color(0xFF5E0B15)
+                              .withOpacity(0.85), // Maroon Card (brand accent)
                         ),
                         child: Column(
                           children: [
                             Icon(
                               slide.icon,
-                              color: const Color(0xFFFFD700), // Gold icon
+                              color: theme.colorScheme.primary,
                               size: 40,
                             ),
                             const SizedBox(height: 15),
@@ -140,7 +136,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ElevatedButton(
                         onPressed: nextPage,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFD700),
+                          backgroundColor: theme.colorScheme.primary,
                           foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 40, vertical: 15),
@@ -153,7 +149,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ? "Get Started"
                               : "Next",
                         ),
-
                       ),
                     ],
                   ),
@@ -180,7 +175,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   height: currentIndex == index ? 12 : 8,
                   decoration: BoxDecoration(
                     color: currentIndex == index
-                        ? const Color(0xFFFFD700)
+                        ? theme.colorScheme.primary
                         : Colors.white,
                     shape: BoxShape.circle,
                   ),

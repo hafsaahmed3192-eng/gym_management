@@ -13,14 +13,16 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
   int selectedAge = 28;
 
   final FixedExtentScrollController _scrollController =
-      FixedExtentScrollController(initialItem: 10);
+  FixedExtentScrollController(initialItem: 10);
 
   final List<int> ages = List.generate(83, (index) => index + 18); // 18–100
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0F14),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -31,10 +33,10 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD700)),
-                label: const Text(
+                icon: Icon(Icons.arrow_back, color: theme.colorScheme.primary),
+                label: Text(
                   "Back",
-                  style: TextStyle(color: Color(0xFFFFD700)),
+                  style: TextStyle(color: theme.colorScheme.primary),
                 ),
               ),
             ),
@@ -44,10 +46,10 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
             //////////////////////////////////////////////////////
             /// TITLE
             //////////////////////////////////////////////////////
-            const Text(
+            Text(
               "How Old Are You?",
               style: TextStyle(
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
               ),
@@ -55,12 +57,14 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
 
             const SizedBox(height: 10),
 
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Text(
                 "This helps us create your personalized fitness plan.",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
               ),
             ),
 
@@ -71,16 +75,16 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
             //////////////////////////////////////////////////////
             Text(
               selectedAge.toString(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 70,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
               ),
             ),
 
             const SizedBox(height: 10),
 
-            const Icon(Icons.arrow_drop_up, color: Color(0xFFFFD700), size: 40),
+            Icon(Icons.arrow_drop_up, color: theme.colorScheme.primary, size: 40),
 
             //////////////////////////////////////////////////////
             /// AGE PICKER
@@ -160,7 +164,7 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFD700),
+                    backgroundColor: theme.colorScheme.primary,
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),

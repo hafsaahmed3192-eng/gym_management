@@ -20,6 +20,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
+
+  bool _obscurePassword = true;
   @override
   void dispose() {
     _emailController.dispose();
@@ -29,8 +31,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0F14),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -42,10 +46,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 //////////////////////////////////////////////////////
                 /// LOGO
                 //////////////////////////////////////////////////////
-                const Icon(
+                Icon(
                   Icons.fitness_center,
                   size: 80,
-                  color: Color(0xFFFFD700),
+                  color: theme.colorScheme.primary,
                 ),
 
                 const SizedBox(height: 20),
@@ -54,12 +58,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 /// APP NAME
                 //////////////////////////////////////////////////////
                 RichText(
-                  text: const TextSpan(
+                  text: TextSpan(
                     children: [
                       TextSpan(
                         text: "FUSION",
                         style: TextStyle(
-                          color: Colors.white,
+                          color: theme.brightness == Brightness.dark
+                              ? Colors.white
+                              : const Color(0xFF1A1A1A), // softer dark
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 2,
@@ -68,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextSpan(
                         text: "GYM",
                         style: TextStyle(
-                          color: Color(0xFFFFD700),
+                          color: theme.colorScheme.primary,
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 2,
@@ -80,10 +86,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 8),
 
-                const Text(
+                Text(
                   "Be an Inspiration",
                   style: TextStyle(
-                    color: Colors.grey,
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
                     fontSize: 16,
                     fontStyle: FontStyle.italic,
                   ),
@@ -110,7 +116,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _passwordController,
                   hint: "Password",
                   icon: Icons.lock,
-                  obscure: true,
+                  obscure: _obscurePassword,
+                  suffix: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: theme.colorScheme.primary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
                 ),
 
                 const SizedBox(height: 40),
@@ -165,17 +184,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const GenderSelectionScreen(),
+                              const GenderSelectionScreen(),
                             ),
                           );
                         } else {
-                          // ✅ IMPORTANT: Add your Dashboard here
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  const DashboardScreen(), // temporary
-                              // change to DashboardScreen later
+                              builder: (context) => const DashboardScreen(),
                             ),
                           );
                         }
@@ -195,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFD700),
+                      backgroundColor: theme.colorScheme.primary,
                       foregroundColor: Colors.black,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -204,12 +220,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.black)
                         : const Text(
-                            "Login",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                      "Login",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
 
@@ -227,10 +243,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     );
                   },
-                  child: const Text(
+                  child: Text(
                     "Forgot Password?",
                     style: TextStyle(
-                      color: Color(0xFFFFD700),
+                      color: theme.colorScheme.primary,
                       decoration: TextDecoration.underline,
                     ),
                   ),
@@ -242,9 +258,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       "No account? ",
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      ),
                     ),
                     GestureDetector(
                       onTap: () {
@@ -255,10 +273,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         );
                       },
-                      child: const Text(
+                      child: Text(
                         "Sign Up",
                         style: TextStyle(
-                          color: Color(0xFFFFD700),
+                          color: theme.colorScheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -271,7 +289,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 //////////////////////////////////////////////////////
                 /// LOGIN WITH
                 //////////////////////////////////////////////////////
-                const Text("Login with", style: TextStyle(color: Colors.grey)),
+                Text(
+                  "Login with",
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                ),
 
                 const SizedBox(height: 20),
 
@@ -280,11 +303,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 //////////////////////////////////////////////////////
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
+                  children: [
                     _SocialIcon(icon: Icons.facebook),
-                    SizedBox(width: 20),
+                    const SizedBox(width: 20),
                     _SocialIcon(icon: Icons.g_mobiledata),
-                    SizedBox(width: 20),
+                    const SizedBox(width: 20),
                     _SocialIcon(icon: Icons.alternate_email),
                   ],
                 ),
@@ -307,17 +330,26 @@ class _LoginScreenState extends State<LoginScreen> {
     required String hint,
     required IconData icon,
     required bool obscure,
+    Widget? suffix,
   }) {
+    final theme = Theme.of(context);
+
     return TextField(
       controller: controller,
       obscureText: obscure,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: theme.colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Colors.grey),
-        prefixIcon: Icon(icon, color: const Color(0xFFFFD700)),
+        hintStyle: TextStyle(
+          color: theme.colorScheme.onSurface.withOpacity(0.6),
+        ),
+        prefixIcon: Icon(
+          icon,
+          color: theme.colorScheme.primary,
+        ),
+        suffixIcon: suffix,
         filled: true,
-        fillColor: const Color(0xFF1C1F26),
+        fillColor: theme.cardColor,
         contentPadding: const EdgeInsets.symmetric(vertical: 18),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
@@ -339,10 +371,12 @@ class _SocialIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return CircleAvatar(
       radius: 22,
-      backgroundColor: const Color(0xFF1C1F26),
-      child: Icon(icon, color: const Color(0xFFFFD700)),
+      backgroundColor: theme.cardColor,
+      child: Icon(icon, color: theme.colorScheme.primary),
     );
   }
 }

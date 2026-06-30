@@ -13,17 +13,19 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen> {
   int selectedHeight = 165;
 
   final FixedExtentScrollController _scrollController =
-      FixedExtentScrollController(initialItem: 15);
+  FixedExtentScrollController(initialItem: 15);
 
   final List<int> heightList = List.generate(
     71,
-    (index) => index + 140,
+        (index) => index + 140,
   ); // 140–210 cm
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0F14),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -34,10 +36,10 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD700)),
-                label: const Text(
+                icon: Icon(Icons.arrow_back, color: theme.colorScheme.primary),
+                label: Text(
                   "Back",
-                  style: TextStyle(color: Color(0xFFFFD700)),
+                  style: TextStyle(color: theme.colorScheme.primary),
                 ),
               ),
             ),
@@ -47,10 +49,10 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen> {
             //////////////////////////////////////////////////////
             /// TITLE
             //////////////////////////////////////////////////////
-            const Text(
+            Text(
               "What Is Your Height?",
               style: TextStyle(
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
               ),
@@ -58,12 +60,14 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen> {
 
             const SizedBox(height: 10),
 
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Text(
                 "This helps us calculate your BMI accurately.",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
               ),
             ),
 
@@ -74,10 +78,10 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen> {
             //////////////////////////////////////////////////////
             Text(
               "$selectedHeight cm",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 60,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
               ),
             ),
 
@@ -133,9 +137,9 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen> {
                   // Yellow indicator arrow
                   Positioned(
                     right: 60,
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_left,
-                      color: Color(0xFFFFD700),
+                      color: theme.colorScheme.primary,
                       size: 35,
                     ),
                   ),
@@ -171,7 +175,7 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFD700),
+                    backgroundColor: theme.colorScheme.primary,
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),

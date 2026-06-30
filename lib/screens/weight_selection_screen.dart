@@ -14,17 +14,19 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen> {
   bool isKg = true;
 
   final FixedExtentScrollController _scrollController =
-      FixedExtentScrollController(initialItem: 55);
+  FixedExtentScrollController(initialItem: 55);
 
   final List<double> weightList = List.generate(
     151,
-    (index) => index + 30,
+        (index) => index + 30,
   ); // 30–180 kg
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0F14),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -35,10 +37,10 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD700)),
-                label: const Text(
+                icon: Icon(Icons.arrow_back, color: theme.colorScheme.primary),
+                label: Text(
                   "Back",
-                  style: TextStyle(color: Color(0xFFFFD700)),
+                  style: TextStyle(color: theme.colorScheme.primary),
                 ),
               ),
             ),
@@ -48,10 +50,10 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen> {
             //////////////////////////////////////////////////////
             /// TITLE
             //////////////////////////////////////////////////////
-            const Text(
+            Text(
               "What Is Your Weight?",
               style: TextStyle(
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
               ),
@@ -59,12 +61,14 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen> {
 
             const SizedBox(height: 10),
 
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Text(
                 "This helps us calculate your BMI and calorie needs.",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
               ),
             ),
 
@@ -176,14 +180,14 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen> {
             //////////////////////////////////////////////////////
             /// BIG WEIGHT DISPLAY
             //////////////////////////////////////////////////////
-            const Icon(Icons.arrow_drop_up, color: Color(0xFFFFD700), size: 40),
+            Icon(Icons.arrow_drop_up, color: theme.colorScheme.primary, size: 40),
 
             Text(
               "${selectedWeight.toStringAsFixed(0)} ${isKg ? "Kg" : "Lb"}",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 60,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
               ),
             ),
 
@@ -223,7 +227,7 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFD700),
+                    backgroundColor: theme.colorScheme.primary,
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
