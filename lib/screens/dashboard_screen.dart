@@ -443,53 +443,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 30),
 
-              //////////////////////////////////////////////////////
-              /// WEEKLY CHALLENGE
-              //////////////////////////////////////////////////////
-
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Weekly Challenge",
-                            style: TextStyle(
-                              color: theme.colorScheme.primary,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            "Plank 3x Everyday",
-                            style: TextStyle(color: theme.colorScheme.onSurface),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: theme.colorScheme.primary,
-                      ),
-                      child: const Icon(
-                        Icons.play_arrow,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              
 
               const SizedBox(height: 20),
 
