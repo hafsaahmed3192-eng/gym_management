@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../model/OnboardData.dart';
+import '../services/onboarding_prefernces.dart';
 import 'login_screen.dart';
 
 ////////////////////////////////////////////////////////////
@@ -37,6 +38,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
   ];
 
+
   void nextPage() {
     if (currentIndex < slides.length - 1) {
       _controller.nextPage(
@@ -44,16 +46,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      // ✅ Navigate to Login Screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
-        ),
-      );
+      _finishOnboarding();
     }
   }
 
+  Future<void> _finishOnboarding() async {
+    await OnboardingPrefs.setSeenOnboarding();
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LoginScreen(),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
