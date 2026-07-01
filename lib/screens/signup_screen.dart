@@ -5,20 +5,26 @@ class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  State<SignUpScreen> createState() =>
+      _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignUpScreenState
+    extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _nameController =
-  TextEditingController();
+      TextEditingController();
   final TextEditingController _emailController =
-  TextEditingController();
+      TextEditingController();
   final TextEditingController _passwordController =
-  TextEditingController();
-  final TextEditingController _confirmPasswordController =
-  TextEditingController();
+      TextEditingController();
+  final TextEditingController
+      _confirmPasswordController =
+      TextEditingController();
+  final TextEditingController
+      _referralCodeController = // ← NEW
+      TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -57,8 +63,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-
+      backgroundColor:
+          theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -66,11 +72,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           color: theme.colorScheme.primary,
         ),
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
-          padding:
-          const EdgeInsets.symmetric(horizontal: 30),
+          padding: const EdgeInsets.symmetric(
+              horizontal: 30),
           child: Form(
             key: _formKey,
             child: Column(
@@ -99,20 +104,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       TextSpan(
                         text: "FUSION",
                         style: TextStyle(
-                          color: Theme.of(context).brightness == Brightness.dark
+                          color: Theme.of(context)
+                                      .brightness ==
+                                  Brightness.dark
                               ? Colors.white
-                              : const Color(0xFF1A1A1A), // softer dark
+                              : const Color(
+                                  0xFF1A1A1A),
                           fontSize: 32,
-                          fontWeight: FontWeight.bold,
+                          fontWeight:
+                              FontWeight.bold,
                           letterSpacing: 2,
                         ),
                       ),
                       TextSpan(
                         text: "GYM",
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary,
                           fontSize: 32,
-                          fontWeight: FontWeight.bold,
+                          fontWeight:
+                              FontWeight.bold,
                           letterSpacing: 2,
                         ),
                       ),
@@ -125,7 +137,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Text(
                   "Be an Inspiration",
                   style: TextStyle(
-                    color: theme.colorScheme.onSurface
+                    color: theme.colorScheme
+                        .onSurface
                         .withOpacity(0.6),
                     fontSize: 16,
                     fontStyle: FontStyle.italic,
@@ -137,7 +150,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Text(
                   "SIGN UP",
                   style: TextStyle(
-                    color: theme.colorScheme.onSurface,
+                    color:
+                        theme.colorScheme.onSurface,
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                   ),
@@ -154,9 +168,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   hint: "Full Name",
                   icon: Icons.person,
                   validator: (value) =>
-                  value == null || value.isEmpty
-                      ? "Full Name is required"
-                      : null,
+                      value == null || value.isEmpty
+                          ? "Full Name is required"
+                          : null,
                 ),
 
                 const SizedBox(height: 20),
@@ -170,9 +184,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   hint: "Email",
                   icon: Icons.email,
                   validator: (value) =>
-                  value == null || value.isEmpty
-                      ? "Email is required"
-                      : null,
+                      value == null || value.isEmpty
+                          ? "Email is required"
+                          : null,
                 ),
 
                 const SizedBox(height: 20),
@@ -193,14 +207,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ? Icons.visibility
                           : Icons.visibility_off,
                       color:
-                      theme.colorScheme.primary,
+                          theme.colorScheme.primary,
                     ),
-                    onPressed: () {
-                      setState(() {
+                    onPressed: () => setState(() =>
                         _obscurePassword =
-                        !_obscurePassword;
-                      });
-                    },
+                            !_obscurePassword),
                   ),
                 ),
 
@@ -212,15 +223,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                 _buildTextField(
                   controller:
-                  _confirmPasswordController,
+                      _confirmPasswordController,
                   hint: "Confirm Password",
                   icon: Icons.lock_outline,
                   obscure: _obscureConfirmPassword,
                   validator: (value) {
                     if (value !=
                         _passwordController.text) {
-                      return
-                        "Passwords do not match";
+                      return "Passwords do not match";
                     }
                     return null;
                   },
@@ -230,14 +240,44 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ? Icons.visibility
                           : Icons.visibility_off,
                       color:
-                      theme.colorScheme.primary,
+                          theme.colorScheme.primary,
                     ),
-                    onPressed: () {
-                      setState(() {
+                    onPressed: () => setState(() =>
                         _obscureConfirmPassword =
-                        !_obscureConfirmPassword;
-                      });
-                    },
+                            !_obscureConfirmPassword),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                //////////////////////////////////////////////////////
+                /// REFERRAL CODE (OPTIONAL) ← NEW
+                //////////////////////////////////////////////////////
+
+                _buildTextField(
+                  controller:
+                      _referralCodeController,
+                  hint: "Referral Code (Optional)",
+                  icon: Icons.card_giftcard,
+                  validator: (_) =>
+                      null, // always valid — optional field
+                ),
+
+                // Small hint text under the field
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 16, top: 6),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Have a referral code? Enter it to earn bonus points!",
+                      style: TextStyle(
+                        color: theme.colorScheme
+                            .onSurface
+                            .withOpacity(0.5),
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
                 ),
 
@@ -251,32 +291,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed:
-                    _isLoading ? null : _signUp,
+                    onPressed: _isLoading
+                        ? null
+                        : _signUp,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                      theme.colorScheme.primary,
-                      foregroundColor:
-                      Colors.black,
-                      shape:
-                      RoundedRectangleBorder(
+                          theme.colorScheme.primary,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
                         borderRadius:
-                        BorderRadius.circular(
-                            30),
+                            BorderRadius.circular(30),
                       ),
                     ),
                     child: _isLoading
                         ? const CircularProgressIndicator(
-                      color: Colors.black,
-                    )
+                            color: Colors.black)
                         : const Text(
-                      "Sign Up",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight:
-                        FontWeight.bold,
-                      ),
-                    ),
+                            "Sign Up",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight:
+                                  FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
 
@@ -288,7 +325,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                 Row(
                   mainAxisAlignment:
-                  MainAxisAlignment.center,
+                      MainAxisAlignment.center,
                   children: [
                     Text(
                       "Already have an account? ",
@@ -299,16 +336,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
+                      onTap: () =>
+                          Navigator.pop(context),
                       child: Text(
                         "Login",
                         style: TextStyle(
                           color: theme
                               .colorScheme.primary,
                           fontWeight:
-                          FontWeight.bold,
+                              FontWeight.bold,
                         ),
                       ),
                     ),
@@ -329,8 +365,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   //////////////////////////////////////////////////////
 
   Future<void> _signUp() async {
-    if (!_formKey.currentState!.validate())
-      return;
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
@@ -338,17 +373,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
       await AuthService().signUp(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
-        password:
-        _passwordController.text.trim(),
+        password: _passwordController.text.trim(),
+        referralCode: _referralCodeController.text
+            .trim()
+            .isEmpty
+            ? null
+            : _referralCodeController.text
+                .trim(), // ← NEW
       );
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content:
-          Text("Account Created Successfully ✅"),
+              Text("Account Created Successfully ✅"),
           backgroundColor: Colors.green,
         ),
       );
@@ -356,16 +395,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
       await Future.delayed(
           const Duration(seconds: 1));
 
+      if (!mounted) return;
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
-    }
-
-    if (mounted) {
-      setState(() => _isLoading = false);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -388,24 +426,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
       obscureText: obscure,
       validator: validator,
       style: TextStyle(
-        color: theme.colorScheme.onSurface,
-      ),
+          color: theme.colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
           color: theme.colorScheme.onSurface
               .withOpacity(0.6),
         ),
-        prefixIcon: Icon(
-          icon,
-          color: theme.colorScheme.primary,
-        ),
+        prefixIcon: Icon(icon,
+            color: theme.colorScheme.primary),
         suffixIcon: suffix,
         filled: true,
         fillColor: theme.cardColor,
         border: OutlineInputBorder(
-          borderRadius:
-          BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(30),
           borderSide: BorderSide.none,
         ),
       ),

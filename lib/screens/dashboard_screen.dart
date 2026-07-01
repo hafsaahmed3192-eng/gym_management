@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gym_management/screens/referral_screen.dart';
+import 'package:gym_management/screens/rewards_screen.dart';
+import 'progress_screen.dart';
 
 import 'article_screen.dart';
 import 'nutrition_screen.dart';
@@ -140,25 +143,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                   Row(
-                    children: [
-                      Icon(Icons.search, color: theme.colorScheme.primary),
-                      const SizedBox(width: 15),
-                      Icon(Icons.notifications,
-                          color: theme.colorScheme.primary),
-                    ],
-                  ),
+  children: [
+    IconButton(
+      icon: Icon(Icons.card_giftcard, color: theme.colorScheme.primary),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ReferralScreen()),
+        );
+      },
+    ),
+    const SizedBox(width: 5),
+    IconButton(
+      icon: Icon(Icons.stars, color: theme.colorScheme.primary),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const RewardsScreen()),
+        );
+      },
+    ),
+  ],
+),
                 ],
               ),
 
               const SizedBox(height: 25),
 
-              //////////////////////////////////////////////////////
-              /// TODAY'S STATS (NEW)
-              //////////////////////////////////////////////////////
-
-              _buildTodayStats(),
-
-              const SizedBox(height: 30),
+            
 
               //////////////////////////////////////////////////////
               /// QUICK ACTIONS
@@ -174,11 +186,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           .fitness_center,
                       label:
                       "Workout"),
-                  const _QuickAction(
-                      icon:
-                      Icons.show_chart,
-                      label:
-                      "Progress"),
+                 _QuickAction(
+    icon: Icons.show_chart,
+    label: "Progress",
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ProgressScreen()),
+      );
+    }),
                   _QuickAction(
                       icon:
                       Icons.restaurant,
