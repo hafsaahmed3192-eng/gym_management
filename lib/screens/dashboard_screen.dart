@@ -3,16 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gym_management/screens/referral_screen.dart';
 import 'package:gym_management/screens/rewards_screen.dart';
-import 'progress_screen.dart';
 
 import 'article_screen.dart';
 import 'nutrition_screen.dart';
 import 'profile_screen.dart';
+import 'progress_screen.dart';
 import 'workout_details_screen.dart';
 import '../model/workout_model.dart';
 import '../services/dashboard_stats_service.dart';
 import '../services/step_tracking_service.dart';
-import 'walk_history_screen.dart';
+import '../services/gender_theme.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -23,14 +23,14 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String userName = "Athlete";
+  int userPoints = 0;
+  GenderTheme genderTheme = GenderTheme.fromString(null);
+
   List<Workout> workouts = [];
   bool isLoadingWorkouts = true;
 
-  final DashboardStatsService _statsService =
-  DashboardStatsService();
-
-  final StepTrackingService _stepService =
-  StepTrackingService();
+  final DashboardStatsService _statsService = DashboardStatsService();
+  final StepTrackingService _stepService = StepTrackingService();
 
   @override
   void initState() {
@@ -51,7 +51,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   //////////////////////////////////////////////////////
-  /// FETCH USER NAME
+  /// FETCH USER NAME / POINTS / GENDER
   //////////////////////////////////////////////////////
 
   Future<void> _fetchUserName() async {
@@ -67,6 +67,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (doc.exists) {
       setState(() {
         userName = doc.data()?['name'] ?? "Athlete";
+        userPoints = doc.data()?['points'] ?? 0;
+        genderTheme = GenderTheme.fromString(doc.data()?['gender']);
       });
     }
   }
@@ -77,7 +79,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _fetchWorkouts() async {
     final snapshot =
-    await FirebaseFirestore.instance.collection('workouts').get();
+        await FirebaseFirestore.instance.collection('workouts').get();
 
     final data = snapshot.docs.map((doc) {
       return Workout.fromFirestore(doc.id, doc.data());
@@ -93,6 +95,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final minutes = seconds ~/ 60;
     final remaining = seconds % 60;
     return "$minutes m ${remaining}s";
+  }
+
+  Color _difficultyColor(String difficulty) {
+    switch (difficulty.toLowerCase()) {
+      case 'beginner':
+        return Colors.greenAccent;
+      case 'intermediate':
+        return Colors.orangeAccent;
+      case 'advanced':
+        return Colors.redAccent;
+      default:
+        return Colors.grey;
+    }
   }
 
   //////////////////////////////////////////////////////
@@ -120,99 +135,231 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 26,
+                          backgroundColor: theme.cardColor,
+                          child: ClipOval(
+                            child: Image.asset(
+                              genderTheme.avatarAsset,
+                              width: 52,
+                              height: 52,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Icon(
+                                genderTheme.gender == AppGender.female
+                                    ? Icons.woman
+                                    : genderTheme.gender == AppGender.male
+                                        ? Icons.man
+                                        : Icons.person,
+                                color: genderTheme.accentColor,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Hi, $userName 👋",
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                "Push your limits today.",
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface
+                                      .withOpacity(0.5),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Row(
                     children: [
-                      Text(
-                        "Hi, $userName 👋",
-                        style: TextStyle(
-                          color: theme.colorScheme.primary,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const RewardsScreen()),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: genderTheme.accentColor.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: genderTheme.accentColor.withOpacity(0.4),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.stars,
+                                  color: genderTheme.accentColor, size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$userPoints',
+                                style: TextStyle(
+                                  color: genderTheme.accentColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 5),
-                      Text(
-                        "Push your limits today.",
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
-                          fontSize: 14,
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: Icon(
+                          Icons.card_giftcard,
+                          color: theme.colorScheme.onSurface.withOpacity(0.7),
                         ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const ReferralScreen()),
+                          );
+                        },
                       ),
                     ],
                   ),
-                  Row(
-  children: [
-    IconButton(
-      icon: Icon(Icons.card_giftcard, color: theme.colorScheme.primary),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ReferralScreen()),
-        );
-      },
-    ),
-    const SizedBox(width: 5),
-    IconButton(
-      icon: Icon(Icons.stars, color: theme.colorScheme.primary),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const RewardsScreen()),
-        );
-      },
-    ),
-  ],
-),
                 ],
               ),
 
-              const SizedBox(height: 25),
+              const SizedBox(height: 20),
 
-            
+              //////////////////////////////////////////////////////
+              /// HERO PROGRESS PREVIEW (NEW)
+              //////////////////////////////////////////////////////
+
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProgressScreen()),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        genderTheme.accentColor.withOpacity(0.18),
+                        theme.cardColor,
+                      ],
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.local_fire_department,
+                          color: genderTheme.accentColor, size: 30),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Today's Progress",
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurface,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              "Tap to view your full activity",
+                              style: TextStyle(
+                                color:
+                                    theme.colorScheme.onSurface.withOpacity(0.5),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios,
+                          color: genderTheme.accentColor, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 30),
 
               //////////////////////////////////////////////////////
               /// QUICK ACTIONS
               //////////////////////////////////////////////////////
 
               Row(
-                mainAxisAlignment:
-                MainAxisAlignment
-                    .spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const _QuickAction(
-                      icon: Icons
-                          .fitness_center,
-                      label:
-                      "Workout"),
-                 _QuickAction(
-    icon: Icons.show_chart,
-    label: "Progress",
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const ProgressScreen()),
-      );
-    }),
                   _QuickAction(
-                      icon:
-                      Icons.restaurant,
-                      label:
-                      "Nutrition",
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const NutritionScreen(),
-                          ),
-                        );
-                      }),
-                  const _QuickAction(
-                      icon:
-                      Icons.people,
-                      label:
-                      "Community"),
+                    icon: Icons.fitness_center,
+                    label: "Workout",
+                    accentColor: genderTheme.accentColor,
+                  ),
+                  _QuickAction(
+                    icon: Icons.show_chart,
+                    label: "Progress",
+                    accentColor: genderTheme.accentColor,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ProgressScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _QuickAction(
+                    icon: Icons.restaurant,
+                    label: "Nutrition",
+                    accentColor: genderTheme.accentColor,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NutritionScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _QuickAction(
+                    icon: Icons.people,
+                    label: "Community",
+                    accentColor: genderTheme.accentColor,
+                  ),
                 ],
               ),
 
@@ -235,7 +382,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   Text(
                     "See All",
-                    style: TextStyle(color: theme.colorScheme.primary),
+                    style: TextStyle(color: genderTheme.accentColor),
                   ),
                 ],
               ),
@@ -244,70 +391,81 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               isLoadingWorkouts
                   ? Center(
-                child: CircularProgressIndicator(
-                  color: theme.colorScheme.primary,
-                ),
-              )
-                  : SizedBox(
-                height: 200,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: workouts.length,
-                  itemBuilder: (context, index) {
-                    final workout = workouts[index];
-
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => WorkoutDetailsScreen(
-                              workoutId: workout.id,
-                            ),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        width: 240,
-                        margin: const EdgeInsets.only(right: 15),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: theme.cardColor,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              workout.name,
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              workout.difficulty.toUpperCase(),
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurface
-                                    .withOpacity(0.6),
-                                fontSize: 12,
-                              ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              formatTime(workout.estimatedTotalTime),
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                          ],
-                        ),
+                      child: CircularProgressIndicator(
+                        color: genderTheme.accentColor,
                       ),
-                    );
-                  },
-                ),
-              ),
+                    )
+                  : SizedBox(
+                      height: 200,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: workouts.length,
+                        itemBuilder: (context, index) {
+                          final workout = workouts[index];
+
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => WorkoutDetailsScreen(
+                                    workoutId: workout.id,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              width: 240,
+                              margin: const EdgeInsets.only(right: 15),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: theme.cardColor,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    workout.name,
+                                    style: TextStyle(
+                                      color: genderTheme.accentColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: _difficultyColor(
+                                              workout.difficulty)
+                                          .withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      workout.difficulty.toUpperCase(),
+                                      style: TextStyle(
+                                        color:
+                                            _difficultyColor(workout.difficulty),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    formatTime(workout.estimatedTotalTime),
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
 
               const SizedBox(height: 30),
 
@@ -331,7 +489,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Text(
                             "Weekly Challenge",
                             style: TextStyle(
-                              color: theme.colorScheme.primary,
+                              color: genderTheme.accentColor,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -348,11 +506,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: theme.colorScheme.primary,
+                        color: genderTheme.accentColor,
                       ),
                       child: const Icon(
                         Icons.play_arrow,
                         color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              //////////////////////////////////////////////////////
+              /// QUOTE OF THE DAY (NEW)
+              //////////////////////////////////////////////////////
+
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: genderTheme.accentColor.withOpacity(0.25),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.format_quote,
+                        color: genderTheme.accentColor, size: 22),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        genderTheme.quoteOfTheDay(),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface.withOpacity(0.85),
+                          fontSize: 14,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ),
                   ],
@@ -364,60 +557,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  //////////////////////////////////////////////////////
-  /// TODAY'S STATS WIDGET (NEW)
-  //////////////////////////////////////////////////////
-
-  Widget _buildTodayStats() {
-    return StreamBuilder<DashboardStats>(
-      stream: _statsService.watchTodayStats(),
-      builder: (context, snapshot) {
-        final stats =
-            snapshot.data ?? DashboardStats.empty();
-
-        return Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                icon: Icons.fitness_center,
-                value: '${stats.exercisesToday}',
-                label: 'Exercises',
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _StatCard(
-                icon: Icons.local_fire_department,
-                value: stats.caloriesBurnedToday
-                    .toStringAsFixed(0),
-                label: 'Calories',
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                      const WalkHistoryScreen(),
-                    ),
-                  );
-                },
-                child: _StatCard(
-                  icon: Icons.directions_walk,
-                  value: '${stats.stepsToday}',
-                  label: 'Steps',
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 
@@ -438,7 +577,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Icon(Icons.home, color: theme.colorScheme.primary),
+          Icon(Icons.home, color: genderTheme.accentColor),
           Icon(Icons.bar_chart,
               color: theme.colorScheme.onSurface.withOpacity(0.5)),
           GestureDetector(
@@ -468,57 +607,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 ////////////////////////////////////////////////////////////
-/// STAT CARD (NEW)
-////////////////////////////////////////////////////////////
-
-class _StatCard extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-
-  const _StatCard({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-          vertical: 16, horizontal: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1C1F26),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Icon(icon,
-              color: const Color(0xFFFFD700),
-              size: 22),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-                color: Colors.grey, fontSize: 11),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-////////////////////////////////////////////////////////////
 /// QUICK ACTION
 ////////////////////////////////////////////////////////////
 
@@ -526,12 +614,19 @@ class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
+  final Color? accentColor;
 
-  const _QuickAction({required this.icon, required this.label, this.onTap});
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    this.onTap,
+    this.accentColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final color = accentColor ?? theme.colorScheme.primary;
 
     return GestureDetector(
       onTap: onTap,
@@ -543,7 +638,7 @@ class _QuickAction extends StatelessWidget {
               color: theme.cardColor,
               borderRadius: BorderRadius.circular(15),
             ),
-            child: Icon(icon, color: theme.colorScheme.primary),
+            child: Icon(icon, color: color),
           ),
           const SizedBox(height: 8),
           Text(

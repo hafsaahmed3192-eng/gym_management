@@ -16,10 +16,13 @@ class ProgressScreen extends StatefulWidget {
 class _ProgressScreenState extends State<ProgressScreen> {
   final DashboardStatsService _statsService = DashboardStatsService();
 
-  static const int dailyExerciseGoal = 5;
+  static const int dailyExerciseGoal = 10;
+
+   static const int dailyStepsTarget = 6000; // fixed scale, not relative to week's max
 
   List<_DayStep> weeklySteps = [];
   bool isLoadingWeek = true;
+  int? selectedDayIndex;
 
   @override
   void initState() {
@@ -54,6 +57,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
       setState(() {
         weeklySteps = results;
         isLoadingWeek = false;
+        selectedDayIndex = results.length - 1;
       });
     }
   }
@@ -273,72 +277,109 @@ class _ProgressScreenState extends State<ProgressScreen> {
     );
   }
 
-  Widget _buildWeeklyChart(ThemeData theme) {
-    final maxSteps = weeklySteps.isEmpty
-        ? 1
-        : weeklySteps.map((d) => d.steps).reduce((a, b) => a > b ? a : b);
-    final safeMax = maxSteps == 0 ? 1 : maxSteps;
-
+ Widget _buildWeeklyChart(ThemeData theme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+      padding: const EdgeInsets.only(top: 20, bottom: 12, left: 15, right: 15),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(24),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: weeklySteps.map((day) {
-          final barHeight = (120 * (day.steps / safeMax)).clamp(6.0, 120.0);
-          final isToday = day == weeklySteps.last;
+      child: SizedBox(
+        height: 160,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: List.generate(weeklySteps.length, (index) {
+            final day = weeklySteps[index];
+            final isSelected = index == selectedDayIndex;
+            final hasData = day.steps > 0;
 
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (isToday)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Text(
-                    '${day.steps}',
-                    style: TextStyle(
-                      color: theme.colorScheme.primary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
+            final ratio = (day.steps / dailyStepsTarget).clamp(0.0, 1.0);
+            final barHeight = hasData ? (110 * ratio).clamp(14.0, 110.0) : 0.0;
+
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  selectedDayIndex = index;
+                });
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 150),
+                    opacity: isSelected ? 1.0 : 0.0,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        '${day.steps}',
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              Container(
-                width: 18,
-                height: barHeight,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: isToday
-                        ? [
-                            theme.colorScheme.primary,
-                            theme.colorScheme.primary.withOpacity(0.4),
-                          ]
-                        : [
-                            theme.colorScheme.onSurface.withOpacity(0.3),
-                            theme.colorScheme.onSurface.withOpacity(0.05),
-                          ],
+
+                  // Bar (only rendered if there's real data)
+                  if (hasData)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: isSelected ? 20 : 16,
+                      height: barHeight,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: isSelected
+                              ? [
+                                  theme.colorScheme.primary,
+                                  theme.colorScheme.primary.withOpacity(0.4),
+                                ]
+                              : [
+                                  theme.colorScheme.onSurface.withOpacity(0.35),
+                                  theme.colorScheme.onSurface.withOpacity(0.08),
+                                ],
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 6),
+
+                  // Baseline dot — always visible, marks the axis
+                  Container(
+                    width: isSelected ? 8 : 6,
+                    height: isSelected ? 8 : 6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: hasData
+                          ? (isSelected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurface.withOpacity(0.3))
+                          : theme.colorScheme.onSurface.withOpacity(0.15),
+                    ),
                   ),
-                ),
+
+                  const SizedBox(height: 8),
+                  Text(
+                    day.label,
+                    style: TextStyle(
+                      color: isSelected
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface.withOpacity(0.5),
+                      fontSize: 11,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                day.label,
-                style: TextStyle(
-                  color: theme.colorScheme.onSurface.withOpacity(0.5),
-                  fontSize: 11,
-                ),
-              ),
-            ],
-          );
-        }).toList(),
+            );
+          }),
+        ),
       ),
     );
   }
