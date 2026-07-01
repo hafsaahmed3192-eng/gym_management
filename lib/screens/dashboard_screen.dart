@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gym_management/screens/referral_screen.dart';
 import 'package:gym_management/screens/rewards_screen.dart';
 import 'package:gym_management/services/user_provider.dart';
+import '../utils/workout_image_resolver.dart';
+import 'all_workouts_screen.dart';
 
 import 'article_screen.dart';
 import 'nutrition_screen.dart';
@@ -50,13 +52,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   //////////////////////////////////////////////////////
 
   Future<void> _fetchWorkouts() async {
-    final snapshot =
-        await FirebaseFirestore.instance.collection('workouts').get();
-
+    final snapshot = await FirebaseFirestore.instance
+        .collection('workouts')
+        .limit(3)           // ← only fetch 3 for dashboard
+        .get();
+ 
     final data = snapshot.docs.map((doc) {
       return Workout.fromFirestore(doc.id, doc.data());
     }).toList();
-
+ 
     setState(() {
       workouts = data;
       isLoadingWorkouts = false;
@@ -339,113 +343,226 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 35),
 
-              //////////////////////////////////////////////////////
-              /// WORKOUTS SECTION
-              //////////////////////////////////////////////////////
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Workouts",
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    "See All",
-                    style: TextStyle(color: theme.colorScheme.primary),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 15),
-
-              isLoadingWorkouts
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        color: theme.colorScheme.primary,
+             //////////////////////////////////////////////////////
+  /// WORKOUTS SECTION
+  //////////////////////////////////////////////////////
+ 
+  Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(
+        "Workouts",
+        style: TextStyle(
+          color: theme.colorScheme.onSurface,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AllWorkoutsScreen(),
+            ),
+          );
+        },
+        child: Text(
+          "See All",
+          style: TextStyle(color: theme.colorScheme.primary),
+        ),
+      ),
+    ],
+  ),
+ 
+  const SizedBox(height: 15),
+ 
+  isLoadingWorkouts
+      ? Center(
+          child: CircularProgressIndicator(
+            color: theme.colorScheme.primary,
+          ),
+        )
+      : SizedBox(
+          height: 220,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: workouts.length,
+            itemBuilder: (context, index) {
+              final workout = workouts[index];
+              final isFemale =
+                  userProvider.genderTheme.gender ==
+                      AppGender.female;
+              final imagePath =
+                  WorkoutImageResolver.resolve(
+                workout.name,
+                isFemale: isFemale,
+              );
+ 
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          WorkoutDetailsScreen(
+                        workoutId: workout.id,
                       ),
-                    )
-                  : SizedBox(
-                      height: 200,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: workouts.length,
-                        itemBuilder: (context, index) {
-                          final workout = workouts[index];
-
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => WorkoutDetailsScreen(
-                                    workoutId: workout.id,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              width: 240,
-                              margin: const EdgeInsets.only(right: 15),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: theme.cardColor,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    workout.name,
-                                    style: TextStyle(
-                                      color: theme.colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: _difficultyColor(
-                                              workout.difficulty)
-                                          .withOpacity(0.15),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      workout.difficulty.toUpperCase(),
-                                      style: TextStyle(
-                                        color:
-                                            _difficultyColor(workout.difficulty),
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 200,
+                  margin: const EdgeInsets.only(right: 15),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius:
+                        BorderRadius.circular(20),
+                  ),
+                  child: ClipRRect(
+                    borderRadius:
+                        BorderRadius.circular(20),
+                    child: Stack(
+                      children: [
+                        // Background image
+                        Positioned.fill(
+                          child: imagePath != null
+                              ? Image.asset(
+                                  imagePath,
+                                  fit: BoxFit.cover,
+                                  errorBuilder:
+                                      (_, __, ___) =>
+                                          Container(
+                                    color: theme.cardColor,
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.fitness_center,
+                                        color: theme
+                                            .colorScheme
+                                            .primary
+                                            .withOpacity(0.4),
+                                        size: 40,
                                       ),
                                     ),
                                   ),
-                                  const Spacer(),
+                                )
+                              : Container(
+                                  color: theme.cardColor,
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.fitness_center,
+                                      color: theme
+                                          .colorScheme
+                                          .primary
+                                          .withOpacity(0.4),
+                                      size: 40,
+                                    ),
+                                  ),
+                                ),
+                        ),
+ 
+                        // Dark gradient overlay so text is readable
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withOpacity(0.75),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+ 
+                        // Text content at bottom
+                        Positioned(
+                          left: 12,
+                          right: 12,
+                          bottom: 12,
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            mainAxisSize:
+                                MainAxisSize.min,
+                            children: [
+                              Text(
+                                workout.name,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight:
+                                      FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 2,
+                                overflow:
+                                    TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding:
+                                        const EdgeInsets
+                                            .symmetric(
+                                      horizontal: 7,
+                                      vertical: 3,
+                                    ),
+                                    decoration:
+                                        BoxDecoration(
+                                      color: _difficultyColor(
+                                              workout
+                                                  .difficulty)
+                                          .withOpacity(
+                                              0.25),
+                                      borderRadius:
+                                          BorderRadius
+                                              .circular(6),
+                                      border: Border.all(
+                                        color: _difficultyColor(
+                                            workout
+                                                .difficulty),
+                                        width: 0.8,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      workout.difficulty
+                                          .toUpperCase(),
+                                      style: TextStyle(
+                                        color:
+                                            _difficultyColor(
+                                                workout
+                                                    .difficulty),
+                                        fontSize: 10,
+                                        fontWeight:
+                                            FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
                                   Text(
-                                    formatTime(workout.estimatedTotalTime),
-                                    style: TextStyle(
-                                      color: theme.colorScheme.onSurface,
+                                    formatTime(workout
+                                        .estimatedTotalTime),
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 11,
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          );
-                        },
-                      ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-
-              const SizedBox(height: 30),
-
-              
-
-              const SizedBox(height: 20),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
 
               //////////////////////////////////////////////////////
               /// QUOTE OF THE DAY
