@@ -5,7 +5,6 @@
 /// - Mixed capitalisation (Male/male, Female/female)
 /// - Typo: "Chest Basics Femlae.png"
 /// - Space before extension: "Elite Leg Destroyer Female .png"
-/// - Missing female variant: "Leg Day Starter" (falls back to male)
 /// - Mixed extensions (.png vs .jpeg)
 class WorkoutImageResolver {
   static const String _base = 'assets/workouts';
@@ -28,7 +27,11 @@ class WorkoutImageResolver {
     // ── LEGS ──
     'Leg Day Starter': _WorkoutImages(
       male: 'Leg Day Starter male.png',
-      female: null, // no female version — falls back to male
+      female: 'Leg Day Starter Female.jpeg', // ← new female version
+    ),
+    'Power Leg Builder': _WorkoutImages(
+      male: 'Power Leg Builder Male.jpeg',
+      female: 'Power Leg Builder Female.jpeg',
     ),
     'Elite Leg Destroyer': _WorkoutImages(
       male: 'Elite Leg Destroyer Male .png',   // space before .png — exact filename
@@ -64,7 +67,18 @@ class WorkoutImageResolver {
     ),
 
     // ── SHOULDERS ──
-    // No shoulder images provided — will show placeholder
+    'Shoulder Starter': _WorkoutImages(
+      male: 'Shoulder Starter Male.png',
+      female: 'Shoulder Starter Female.png',
+    ),
+    'Boulder Shoulders': _WorkoutImages(
+      male: 'Boulder Shoulders Male.png',
+      female: 'Boulder Shoulders Female.png',
+    ),
+    'Advanced Shoulder Mass': _WorkoutImages(
+      male: 'Advanced Shoulder Mass Male.jpeg',
+      female: 'Advanced Shoulder Mass Female.png',
+    ),
 
     // ── BICEPS ──
     'Arm Day Bicep Blast': _WorkoutImages(
