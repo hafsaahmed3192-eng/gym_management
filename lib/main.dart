@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/theme_provider.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -33,6 +32,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context);
+
+    // Gold by default until userData loads, then switches to the
+    // gender-based accent (rose-gold for female, gold for male/other).
+    final accentColor = userProvider.genderTheme.accentColor;
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -45,9 +49,9 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.light,
         scaffoldBackgroundColor: Colors.white,
 
-        colorScheme: const ColorScheme.light(
-          primary: Color(0xFFFFD700), // Gold
-          surface: Color(0xFFF2F2F2),
+        colorScheme: ColorScheme.light(
+          primary: accentColor,
+          surface: const Color(0xFFF2F2F2),
           onSurface: Colors.black,
         ),
 
@@ -59,17 +63,17 @@ class MyApp extends StatelessWidget {
           elevation: 0,
         ),
 
-        iconTheme: const IconThemeData(
-          color: Color(0xFFFFD700),
+        iconTheme: IconThemeData(
+          color: accentColor,
         ),
 
-        textTheme: const TextTheme(
-          headlineMedium: TextStyle(
+        textTheme: TextTheme(
+          headlineMedium: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
-          bodyMedium: TextStyle(
+          bodyMedium: const TextStyle(
             fontSize: 14,
             color: Colors.black,
           ),
@@ -83,9 +87,9 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF0D0F14),
 
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFFFD700), // Gold
-          surface: Color(0xFF1C1F26),
+        colorScheme: ColorScheme.dark(
+          primary: accentColor,
+          surface: const Color(0xFF1C1F26),
           onSurface: Colors.white,
         ),
 
@@ -96,17 +100,17 @@ class MyApp extends StatelessWidget {
           elevation: 0,
         ),
 
-        iconTheme: const IconThemeData(
-          color: Color(0xFFFFD700),
+        iconTheme: IconThemeData(
+          color: accentColor,
         ),
 
-        textTheme: const TextTheme(
+        textTheme: TextTheme(
           headlineMedium: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: Color(0xFFFFD700),
+            color: accentColor,
           ),
-          bodyMedium: TextStyle(
+          bodyMedium: const TextStyle(
             fontSize: 14,
             color: Colors.white,
           ),
