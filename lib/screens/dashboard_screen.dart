@@ -1,8 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gym_management/services/gender_theme.dart';
+import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:gym_management/screens/referral_screen.dart';
 import 'package:gym_management/screens/rewards_screen.dart';
+import 'package:gym_management/services/user_provider.dart';
 
 import 'article_screen.dart';
 import 'nutrition_screen.dart';
@@ -10,9 +13,7 @@ import 'profile_screen.dart';
 import 'progress_screen.dart';
 import 'workout_details_screen.dart';
 import '../model/workout_model.dart';
-import '../services/dashboard_stats_service.dart';
 import '../services/step_tracking_service.dart';
-import '../services/gender_theme.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,25 +23,19 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  String userName = "Athlete";
-  int userPoints = 0;
-  GenderTheme genderTheme = GenderTheme.fromString(null);
-
   List<Workout> workouts = [];
   bool isLoadingWorkouts = true;
 
-  final DashboardStatsService _statsService = DashboardStatsService();
   final StepTrackingService _stepService = StepTrackingService();
 
   @override
   void initState() {
     super.initState();
-    _fetchUserName();
     _fetchWorkouts();
 
-    // Starts listening to the phone's step sensor
-    // automatically — no manual start button needed.
-    // Requests ACTIVITY_RECOGNITION permission on first run.
+    // Starts listening to the phone's step sensor automatically —
+    // no manual start button needed. Requests ACTIVITY_RECOGNITION
+    // permission on first run.
     _stepService.initialize();
   }
 
@@ -48,29 +43,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void dispose() {
     _stepService.dispose();
     super.dispose();
-  }
-
-  //////////////////////////////////////////////////////
-  /// FETCH USER NAME / POINTS / GENDER
-  //////////////////////////////////////////////////////
-
-  Future<void> _fetchUserName() async {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) return;
-
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-
-    if (doc.exists) {
-      setState(() {
-        userName = doc.data()?['name'] ?? "Athlete";
-        userPoints = doc.data()?['points'] ?? 0;
-        genderTheme = GenderTheme.fromString(doc.data()?['gender']);
-      });
-    }
   }
 
   //////////////////////////////////////////////////////
@@ -117,6 +89,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final userProvider = context.watch<UserProvider>();
+
+    final userName = userProvider.userData?['name'] ?? "Athlete";
+    final userPoints = userProvider.userData?['points'] ?? 0;
+    final genderTheme = userProvider.genderTheme;
+    final avatarPath = userProvider.avatarPath;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -145,7 +123,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           backgroundColor: theme.cardColor,
                           child: ClipOval(
                             child: Image.asset(
-                              genderTheme.avatarAsset,
+                              avatarPath,
                               width: 52,
                               height: 52,
                               fit: BoxFit.cover,
@@ -156,7 +134,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     : genderTheme.gender == AppGender.male
                                         ? Icons.man
                                         : Icons.person,
-                                color: genderTheme.accentColor,
+                                color: theme.colorScheme.primary,
                                 size: 28,
                               ),
                             ),
@@ -209,22 +187,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: genderTheme.accentColor.withOpacity(0.15),
+                            color: theme.colorScheme.primary.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: genderTheme.accentColor.withOpacity(0.4),
+                              color: theme.colorScheme.primary.withOpacity(0.4),
                             ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.stars,
-                                  color: genderTheme.accentColor, size: 16),
+                                  color: theme.colorScheme.primary, size: 16),
                               const SizedBox(width: 4),
                               Text(
                                 '$userPoints',
                                 style: TextStyle(
-                                  color: genderTheme.accentColor,
+                                  color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 13,
                                 ),
@@ -255,7 +233,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 20),
 
               //////////////////////////////////////////////////////
-              /// HERO PROGRESS PREVIEW (NEW)
+              /// HERO PROGRESS PREVIEW
               //////////////////////////////////////////////////////
 
               GestureDetector(
@@ -274,7 +252,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        genderTheme.accentColor.withOpacity(0.18),
+                        theme.colorScheme.primary.withOpacity(0.18),
                         theme.cardColor,
                       ],
                     ),
@@ -282,7 +260,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Row(
                     children: [
                       Icon(Icons.local_fire_department,
-                          color: genderTheme.accentColor, size: 30),
+                          color: theme.colorScheme.primary, size: 30),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
@@ -309,7 +287,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       Icon(Icons.arrow_forward_ios,
-                          color: genderTheme.accentColor, size: 16),
+                          color: theme.colorScheme.primary, size: 16),
                     ],
                   ),
                 ),
@@ -324,15 +302,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _QuickAction(
+                  const _QuickAction(
                     icon: Icons.fitness_center,
                     label: "Workout",
-                    accentColor: genderTheme.accentColor,
                   ),
                   _QuickAction(
                     icon: Icons.show_chart,
                     label: "Progress",
-                    accentColor: genderTheme.accentColor,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -345,7 +321,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _QuickAction(
                     icon: Icons.restaurant,
                     label: "Nutrition",
-                    accentColor: genderTheme.accentColor,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -355,10 +330,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       );
                     },
                   ),
-                  _QuickAction(
+                  const _QuickAction(
                     icon: Icons.people,
                     label: "Community",
-                    accentColor: genderTheme.accentColor,
                   ),
                 ],
               ),
@@ -382,7 +356,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   Text(
                     "See All",
-                    style: TextStyle(color: genderTheme.accentColor),
+                    style: TextStyle(color: theme.colorScheme.primary),
                   ),
                 ],
               ),
@@ -392,7 +366,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               isLoadingWorkouts
                   ? Center(
                       child: CircularProgressIndicator(
-                        color: genderTheme.accentColor,
+                        color: theme.colorScheme.primary,
                       ),
                     )
                   : SizedBox(
@@ -428,7 +402,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   Text(
                                     workout.name,
                                     style: TextStyle(
-                                      color: genderTheme.accentColor,
+                                      color: theme.colorScheme.primary,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -489,7 +463,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Text(
                             "Weekly Challenge",
                             style: TextStyle(
-                              color: genderTheme.accentColor,
+                              color: theme.colorScheme.primary,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -506,7 +480,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: genderTheme.accentColor,
+                        color: theme.colorScheme.primary,
                       ),
                       child: const Icon(
                         Icons.play_arrow,
@@ -520,7 +494,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 20),
 
               //////////////////////////////////////////////////////
-              /// QUOTE OF THE DAY (NEW)
+              /// QUOTE OF THE DAY
               //////////////////////////////////////////////////////
 
               Container(
@@ -530,13 +504,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: theme.cardColor,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: genderTheme.accentColor.withOpacity(0.25),
+                    color: theme.colorScheme.primary.withOpacity(0.25),
                   ),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.format_quote,
-                        color: genderTheme.accentColor, size: 22),
+                        color: theme.colorScheme.primary, size: 22),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -577,7 +551,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Icon(Icons.home, color: genderTheme.accentColor),
+          Icon(Icons.home, color: theme.colorScheme.primary),
           Icon(Icons.bar_chart,
               color: theme.colorScheme.onSurface.withOpacity(0.5)),
           GestureDetector(
@@ -614,19 +588,16 @@ class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
-  final Color? accentColor;
 
   const _QuickAction({
     required this.icon,
     required this.label,
     this.onTap,
-    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = accentColor ?? theme.colorScheme.primary;
 
     return GestureDetector(
       onTap: onTap,
@@ -638,7 +609,7 @@ class _QuickAction extends StatelessWidget {
               color: theme.cardColor,
               borderRadius: BorderRadius.circular(15),
             ),
-            child: Icon(icon, color: color),
+            child: Icon(icon, color: theme.colorScheme.primary),
           ),
           const SizedBox(height: 8),
           Text(
