@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:gym_management/screens/dashboard_screen.dart';
 import 'package:gym_management/screens/video_topic.dart';
 import 'package:gym_management/screens/youtube_launcher.dart';
 import '../model/article_model.dart';
+import '../services/user_provider.dart';
 
 import 'article_services.dart';
 import 'article_web_screen.dart';
@@ -16,28 +18,54 @@ class ArticlesScreen extends StatefulWidget {
 }
 
 class _ArticlesScreenState extends State<ArticlesScreen> {
-  String selectedFilter = "All"; // "All" | "Video" | "Article"
+  String selectedFilter = "All";
 
   final ArticleService _articleService = ArticleService();
   List<ArticleModel> _articles = [];
   bool _isLoading = true;
   String? _errorMessage;
 
+  // Tracks which gender we last fetched articles for, so we only refetch
+  // when it actually changes (e.g. null -> "Female" once UserProvider loads).
+  String? _loadedForGender;
+
   @override
-  void initState() {
-    super.initState();
-    _loadArticles();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // context.watch here (not context.read) so this widget rebuilds and
+    // re-runs this check when UserProvider finishes loading userData
+    // asynchronously after app start / auth.
+    final gender = context.watch<UserProvider>().userData?['gender'] as String?;
+
+    if (gender != null && gender != _loadedForGender) {
+      // Gender just became known (or changed) — fetch for it.
+      _loadedForGender = gender;
+      _loadArticles();
+    }
+    // If gender is still null, we intentionally do nothing and stay in the
+    // loading state rather than defaulting to the male feed.
   }
 
   Future<void> _loadArticles({bool forceRefresh = false}) async {
+    final gender = context.read<UserProvider>().userData?['gender'] as String?;
+
+    // Safety net: never fetch with an unknown gender, even if this gets
+    // called before didChangeDependencies has set it (e.g. pull-to-refresh
+    // racing with a provider update).
+    if (gender == null) return;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
-      final articles =
-      await _articleService.getArticles(forceRefresh: forceRefresh);
+      final articles = await _articleService.getArticles(
+        gender: gender,
+        forceRefresh: forceRefresh,
+      );
+      if (!mounted) return;
       setState(() {
         _articles = articles;
         _isLoading = false;
@@ -46,6 +74,7 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
         }
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
         _errorMessage = "Couldn't load articles. Pull down to retry.";
@@ -54,6 +83,14 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
   }
 
   List<ArticleModel> get filteredArticles => _articles;
+
+  List<VideoTopic> get filteredVideoTopics {
+    final gender = context.watch<UserProvider>().userData?['gender'] as String?;
+    final g = gender?.toLowerCase() == 'female' ? 'female' : 'male';
+    return videoTopics
+        .where((t) => t.gender == 'all' || t.gender == g)
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -209,14 +246,33 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
   /// VIDEO TOPICS LIST (opens YouTube search per topic)
   //////////////////////////////////////////////////////
   Widget _buildVideoTopicList(ThemeData theme) {
+    final topics = filteredVideoTopics;
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: videoTopics.length,
+      itemCount: topics.length,
       itemBuilder: (context, index) {
-        final topic = videoTopics[index];
+        final topic = topics[index];
         return _buildVideoTopicCard(topic, theme);
       },
     );
+  }
+
+  //////////////////////////////////////////////////////
+  /// Builds the actual YouTube search query for a topic.
+  /// - Topics already tagged 'male' or 'female' already have a
+  ///   gender-specific searchQuery baked in (e.g. "... for men") —
+  ///   leave those untouched.
+  /// - Topics tagged 'all' are generic, so append a gender qualifier
+  ///   based on the logged-in user's gender.
+  //////////////////////////////////////////////////////
+  String _genderAwareQuery(VideoTopic topic, BuildContext context) {
+    if (topic.gender != 'all') return topic.searchQuery;
+
+    final gender =
+    context.read<UserProvider>().userData?['gender'] as String?;
+    final isFemale = gender?.toLowerCase() == 'female';
+    final suffix = isFemale ? 'for women' : 'for men';
+    return "${topic.searchQuery} $suffix";
   }
 
   Widget _buildVideoTopicCard(VideoTopic topic, ThemeData theme) {
@@ -224,7 +280,7 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
       onTap: () {
         YoutubeLauncher.searchAndOpen(
           context,
-          query: topic.searchQuery,
+          query: _genderAwareQuery(topic, context),
           title: topic.title,
         );
       },

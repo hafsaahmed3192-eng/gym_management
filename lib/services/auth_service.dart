@@ -148,4 +148,31 @@ class AuthService {
   Future<void> logout() async {
     await _auth.signOut();
   }
+  Future<List<QueryDocumentSnapshot>> fetchArticlesForUser(String? userGender) async {
+    final gender = userGender?.toLowerCase() == 'female' ? 'female' : 'male';
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('articles')
+        .where('gender', whereIn: [gender, 'all'])
+        .orderBy('createdAt', descending: true)
+        .get();
+
+    return snapshot.docs;
+  }
+  Future<List<QueryDocumentSnapshot>> searchArticles({
+    required String query,
+    required String? userGender,
+  }) async {
+    final gender = userGender?.toLowerCase() == 'female' ? 'female' : 'male';
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('articles')
+        .where('gender', whereIn: [gender, 'all'])
+        .orderBy('title')
+        .startAt([query])
+        .endAt(['$query\uf8ff'])
+        .get();
+
+    return snapshot.docs;
+  }
 }
