@@ -1,137 +1,15 @@
-import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../services/user_provider.dart';
+import 'avatar_picker_sheet.dart';
 import 'login_screen.dart';
 import 'theme_provider.dart';
 
-class ProfileScreen extends StatefulWidget {
+
+class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
-
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  Map<String, dynamic>? userData;
-  bool isLoading = true;
-  File? _imageFile;
-  final ImagePicker _picker = ImagePicker();
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUserData();
-  }
-
-  //////////////////////////////////////////////////////
-  /// FETCH USER DATA
-  //////////////////////////////////////////////////////
-  Future<void> _fetchUserData() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-
-    if (doc.exists) {
-      setState(() {
-        userData = doc.data();
-        isLoading = false;
-      });
-    } else {
-      setState(() => isLoading = false);
-    }
-  }
-
-  //////////////////////////////////////////////////////
-  /// IMAGE PICK
-  //////////////////////////////////////////////////////
-  Future<void> _pickImage(ImageSource source) async {
-    final picked =
-    await _picker.pickImage(source: source, imageQuality: 75);
-
-    if (picked != null) {
-      setState(() => _imageFile = File(picked.path));
-      await _uploadImage();
-    }
-  }
-
-  //////////////////////////////////////////////////////
-  /// UPLOAD IMAGE
-  //////////////////////////////////////////////////////
-  Future<void> _uploadImage() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null || _imageFile == null) return;
-
-    final storageRef = FirebaseStorage.instance
-        .ref()
-        .child('profile_images/${user.uid}.jpg');
-
-    await storageRef.putFile(_imageFile!);
-    final downloadUrl = await storageRef.getDownloadURL();
-
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .set({'profileImage': downloadUrl}, SetOptions(merge: true));
-
-    setState(() {
-      userData?['profileImage'] = downloadUrl;
-    });
-  }
-
-  //////////////////////////////////////////////////////
-  /// IMAGE OPTIONS
-  //////////////////////////////////////////////////////
-  void _showImageOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      builder: (_) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: Icon(
-                Icons.camera_alt,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              title: Text(
-                "Take Photo",
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.camera);
-              },
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.photo_library,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              title: Text(
-                "Choose from Gallery",
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.gallery);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   //////////////////////////////////////////////////////
   /// UI
@@ -139,6 +17,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final userProvider = context.watch<UserProvider>();
+    final userData = userProvider.userData;
+    final isLoading = userProvider.isLoading;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -152,8 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        iconTheme:
-        IconThemeData(color: theme.colorScheme.primary),
+        iconTheme: IconThemeData(color: theme.colorScheme.primary),
       ),
       body: isLoading
           ? Center(
@@ -166,27 +46,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           children: [
             //////////////////////////////////////////////////////
-            /// PROFILE IMAGE
+            /// PROFILE AVATAR (tap to pick from 6)
             //////////////////////////////////////////////////////
             GestureDetector(
-              onTap: _showImageOptions,
-              child: CircleAvatar(
-                radius: 55,
-                backgroundColor: theme.cardColor,
-                backgroundImage: _imageFile != null
-                    ? FileImage(_imageFile!)
-                    : (userData?['profileImage'] != null
-                    ? NetworkImage(
-                    userData!['profileImage'])
-                    : null) as ImageProvider?,
-                child: _imageFile == null &&
-                    userData?['profileImage'] == null
-                    ? Icon(
-                  Icons.add_a_photo,
-                  size: 35,
-                  color: theme.colorScheme.primary,
-                )
-                    : null,
+              onTap: () => showAvatarPicker(context),
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 55,
+                    backgroundColor: theme.cardColor,
+                    backgroundImage: AssetImage(userProvider.avatarPath),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: theme.colorScheme.primary,
+                        border: Border.all(
+                          color: theme.scaffoldBackgroundColor,
+                          width: 2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.edit,
+                        size: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -206,8 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Text(
               userData?['email'] ?? "",
               style: TextStyle(
-                color: theme.colorScheme.onSurface
-                    .withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
 
@@ -220,28 +110,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: theme.cardColor,
-                borderRadius:
-                BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
                 children: [
-                  _buildInfoRow("Age",
-                      userData?['age']?.toString()),
+                  _buildInfoRow(context, "Age", userData?['age']?.toString()),
                   _buildInfoRow(
+                      context,
                       "Weight",
                       userData?['weight'] != null
                           ? "${userData?['weight']} kg"
                           : "--"),
                   _buildInfoRow(
+                      context,
                       "Height",
                       userData?['height'] != null
                           ? "${userData?['height']} cm"
                           : "--"),
+                  _buildInfoRow(context, "Goal", userData?['goal']),
                   _buildInfoRow(
-                      "Goal", userData?['goal']),
-                  _buildInfoRow(
-                      "Activity Level",
-                      userData?['activityLevel']),
+                      context, "Activity Level", userData?['activityLevel']),
                 ],
               ),
             ),
@@ -251,32 +139,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             //////////////////////////////////////////////////////
             /// MENU OPTIONS
             //////////////////////////////////////////////////////
-            _buildMenuItem(Icons.dark_mode, "Theme",
-                    () {
-                  Provider.of<ThemeProvider>(context,
-                      listen: false)
-                      .toggleTheme();
-                }),
+            _buildMenuItem(context, Icons.dark_mode, "Theme", () {
+              Provider.of<ThemeProvider>(context, listen: false)
+                  .toggleTheme();
+            }),
+            _buildMenuItem(context, Icons.favorite, "Favorite", () {}),
+            _buildMenuItem(context, Icons.lock, "Privacy Policy", () {}),
+            _buildMenuItem(context, Icons.settings, "Settings", () {}),
+            _buildMenuItem(context, Icons.help, "Help", () {}),
             _buildMenuItem(
-                Icons.favorite, "Favorite", () {}),
-            _buildMenuItem(
-                Icons.lock, "Privacy Policy", () {}),
-            _buildMenuItem(
-                Icons.settings, "Settings", () {}),
-            _buildMenuItem(
-                Icons.help, "Help", () {}),
-            _buildMenuItem(
+              context,
               Icons.logout,
               "Logout",
                   () async {
-                await FirebaseAuth.instance
-                    .signOut();
-                if (!mounted) return;
+                context.read<UserProvider>().clear();
+                await FirebaseAuth.instance.signOut();
+                if (!context.mounted) return;
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(
-                      builder: (_) =>
-                      const LoginScreen()),
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
                       (route) => false,
                 );
               },
@@ -291,21 +172,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   //////////////////////////////////////////////////////
   /// INFO ROW
   //////////////////////////////////////////////////////
-  Widget _buildInfoRow(String title, String? value) {
+  Widget _buildInfoRow(BuildContext context, String title, String? value) {
     final theme = Theme.of(context);
 
     return Padding(
-      padding:
-      const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        mainAxisAlignment:
-        MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             title,
             style: TextStyle(
-              color: theme.colorScheme.onSurface
-                  .withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
           Text(
@@ -324,6 +202,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   /// MENU ITEM
   //////////////////////////////////////////////////////
   Widget _buildMenuItem(
+      BuildContext context,
       IconData icon,
       String title,
       VoidCallback onTap, {
@@ -332,43 +211,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final theme = Theme.of(context);
 
     return Container(
-      margin:
-      const EdgeInsets.only(bottom: 15),
+      margin: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius:
-        BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(15),
       ),
       child: ListTile(
         leading: Container(
-          padding:
-          const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color:
-            theme.scaffoldBackgroundColor,
+            color: theme.scaffoldBackgroundColor,
           ),
           child: Icon(
             icon,
-            color: isLogout
-                ? Colors.red
-                : theme.colorScheme.primary,
+            color: isLogout ? Colors.red : theme.colorScheme.primary,
           ),
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: isLogout
-                ? Colors.red
-                : theme.colorScheme.onSurface,
+            color: isLogout ? Colors.red : theme.colorScheme.onSurface,
             fontWeight: FontWeight.w500,
           ),
         ),
         trailing: Icon(
           Icons.arrow_forward_ios,
           size: 16,
-          color: theme.colorScheme.onSurface
-              .withOpacity(0.4),
+          color: theme.colorScheme.onSurface.withOpacity(0.4),
         ),
         onTap: onTap,
       ),

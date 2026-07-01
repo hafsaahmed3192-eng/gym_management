@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:gym_management/screens/article_screen.dart';
+import 'package:gym_management/services/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/theme_provider.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,12 +14,14 @@ void main() async {
   //////////////////////////////////////////////////////
   /// LOAD SAVED THEME BEFORE RUNNING APP
   //////////////////////////////////////////////////////
-  final isDark =
-  await ThemeProvider.loadThemeFromPrefs();
+  final isDark = await ThemeProvider.loadThemeFromPrefs();
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(isDark),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider(isDark)),
+        ChangeNotifierProvider(create: (_) => UserProvider()..fetchUserData()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -28,8 +32,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider =
-    Provider.of<ThemeProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -78,8 +81,7 @@ class MyApp extends StatelessWidget {
       //////////////////////////////////////////////////////
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor:
-        const Color(0xFF0D0F14),
+        scaffoldBackgroundColor: const Color(0xFF0D0F14),
 
         colorScheme: const ColorScheme.dark(
           primary: Color(0xFFFFD700), // Gold
@@ -90,8 +92,7 @@ class MyApp extends StatelessWidget {
         cardColor: const Color(0xFF1C1F26),
 
         appBarTheme: const AppBarTheme(
-          backgroundColor:
-          Color(0xFF0D0F14),
+          backgroundColor: Color(0xFF0D0F14),
           elevation: 0,
         ),
 
