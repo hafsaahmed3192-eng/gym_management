@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../services/user_provider.dart';
 import 'avatar_picker_sheet.dart';
+
+import 'favorite_screen.dart';
 import 'login_screen.dart';
 import 'theme_provider.dart';
 
@@ -143,7 +145,12 @@ class ProfileScreen extends StatelessWidget {
               Provider.of<ThemeProvider>(context, listen: false)
                   .toggleTheme();
             }),
-            _buildMenuItem(context, Icons.favorite, "Favorite", () {}),
+            _buildMenuItem(context, Icons.favorite, "Favorite", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+              );
+            }),
             _buildMenuItem(context, Icons.lock, "Privacy Policy", () {}),
             _buildMenuItem(context, Icons.settings, "Settings", () {}),
             _buildMenuItem(context, Icons.help, "Help", () {}),

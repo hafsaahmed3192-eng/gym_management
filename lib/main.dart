@@ -20,6 +20,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider(isDark)),
         ChangeNotifierProvider(create: (_) => UserProvider()..fetchUserData()),
+
       ],
       child: const MyApp(),
     ),

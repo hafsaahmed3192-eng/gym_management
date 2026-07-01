@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_management/screens/favorite_screen.dart';
 import 'package:gym_management/services/gender_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -234,7 +235,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 25),
 
               //////////////////////////////////////////////////////
               /// HERO PROGRESS PREVIEW
@@ -384,7 +385,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         )
       : SizedBox(
-          height: 220,
+          height: 300,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: workouts.length,
@@ -567,7 +568,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               //////////////////////////////////////////////////////
               /// QUOTE OF THE DAY
               //////////////////////////////////////////////////////
-
+              const SizedBox(height: 25),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
@@ -623,8 +624,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Icon(Icons.home, color: theme.colorScheme.primary),
-          Icon(Icons.bar_chart,
-              color: theme.colorScheme.onSurface.withOpacity(0.5)),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+              );
+            },
+            child: Icon(Icons.favorite,
+                color: theme.colorScheme.onSurface.withOpacity(0.5)),
+          ),
           GestureDetector(
             onTap: () {
               Navigator.push(

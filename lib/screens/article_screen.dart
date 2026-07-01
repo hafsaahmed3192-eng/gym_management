@@ -4,7 +4,9 @@ import 'package:gym_management/screens/dashboard_screen.dart';
 import 'package:gym_management/screens/video_topic.dart';
 import 'package:gym_management/screens/youtube_launcher.dart';
 import '../model/article_model.dart';
+import '../services/favorite_services.dart';
 import '../services/user_provider.dart';
+
 
 import 'article_services.dart';
 import 'article_web_screen.dart';
@@ -28,6 +30,62 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
   // Tracks which gender we last fetched articles for, so we only refetch
   // when it actually changes (e.g. null -> "Female" once UserProvider loads).
   String? _loadedForGender;
+
+  // URLs of articles the user has favorited, used to decide which heart
+  // icon (filled vs outline) to render on each card.
+  Set<String> _favoriteUrls = {};
+
+  // URLs currently showing the "just favorited" heart pop-up animation.
+  Set<String> _poppingHearts = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavoriteUrls();
+  }
+
+  Future<void> _loadFavoriteUrls() async {
+    final urls = await FavoritesService.getFavoriteUrls();
+    if (!mounted) return;
+    setState(() {
+      _favoriteUrls = urls;
+    });
+  }
+
+  Future<void> _toggleFavorite(ArticleModel article) async {
+    try {
+      final isNowFavorited = await FavoritesService.toggleFavorite(
+        url: article.url,
+        title: article.title,
+        description: article.description,
+        imageUrl: article.imageUrl,
+      );
+      if (!mounted) return;
+      setState(() {
+        if (isNowFavorited) {
+          _favoriteUrls.add(article.url);
+          // Trigger the pop-up heart animation only when favoriting,
+          // not when un-favoriting.
+          _poppingHearts.add(article.url);
+        } else {
+          _favoriteUrls.remove(article.url);
+        }
+      });
+    } catch (e) {
+      debugPrint('Failed to toggle favorite: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save favorite: $e')),
+      );
+    }
+  }
+
+  void _onHeartPopFinished(String url) {
+    if (!mounted) return;
+    setState(() {
+      _poppingHearts.remove(url);
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -396,113 +454,158 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
   /// ARTICLE CARD
   //////////////////////////////////////////////////////
   Widget _buildArticleCard(ArticleModel article, ThemeData theme) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ArticleWebViewScreen(
-              url: article.url,
-              title: article.title,
-            ),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 18),
-        height: 110,
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            //////////////////////////////////////////////////////
-            /// TEXT CONTENT
-            //////////////////////////////////////////////////////
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      article.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      article.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+    final bool isFavorited = _favoriteUrls.contains(article.url);
+    final bool isPopping = _poppingHearts.contains(article.url);
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ArticleWebViewScreen(
+                  url: article.url,
+                  title: article.title,
                 ),
               ),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 18),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(20),
             ),
-
-            //////////////////////////////////////////////////////
-            /// IMAGE + FAVORITE STAR
-            //////////////////////////////////////////////////////
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
-                  ),
-                  child: article.imageUrl.isEmpty
-                      ? Container(
-                    width: 110,
-                    height: 110,
-                    color: theme.scaffoldBackgroundColor,
-                    child: Icon(
-                      Icons.fitness_center,
-                      color: theme.colorScheme.onSurface.withOpacity(0.4),
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
+                  //////////////////////////////////////////////////////
+                  /// TEXT CONTENT + HEART BUTTON
+                  /// (kept off the image so it's always visible against
+                  /// the solid card background, regardless of photo colors)
+                  //////////////////////////////////////////////////////
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            article.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            article.description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          GestureDetector(
+                            onTap: () => _toggleFavorite(article),
+                            behavior: HitTestBehavior.opaque,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isFavorited
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: isFavorited
+                                      ? Colors.redAccent
+                                      : theme.colorScheme.onSurface
+                                      .withOpacity(0.6),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  isFavorited ? "Saved" : "Save",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: isFavorited
+                                        ? Colors.redAccent
+                                        : theme.colorScheme.onSurface
+                                        .withOpacity(0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  )
-                      : Image.network(
-                    article.imageUrl,
-                    width: 110,
-                    height: 110,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+                  ),
+
+                  //////////////////////////////////////////////////////
+                  /// IMAGE
+                  //////////////////////////////////////////////////////
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                    child: article.imageUrl.isEmpty
+                        ? Container(
                       width: 110,
                       height: 110,
                       color: theme.scaffoldBackgroundColor,
                       child: Icon(
-                        Icons.image_not_supported,
-                        color:
-                        theme.colorScheme.onSurface.withOpacity(0.4),
+                        Icons.fitness_center,
+                        color: theme.colorScheme.onSurface.withOpacity(0.4),
+                      ),
+                    )
+                        : Image.network(
+                      article.imageUrl,
+                      width: 110,
+                      height: 110,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 110,
+                        height: 110,
+                        color: theme.scaffoldBackgroundColor,
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color:
+                          theme.colorScheme.onSurface.withOpacity(0.4),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Icon(
-                    Icons.star_border,
-                    color: theme.colorScheme.primary,
-                    size: 20,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ],
+          ),
         ),
-      ),
+
+        //////////////////////////////////////////////////////
+        /// HEART POP-UP ANIMATION (shown briefly when favorited)
+        //////////////////////////////////////////////////////
+        if (isPopping)
+          Positioned.fill(
+            bottom: 18, // account for the card's bottom margin
+            child: IgnorePointer(
+              child: Center(
+                child: _HeartPop(
+                  onCompleted: () => _onHeartPopFinished(article.url),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -554,6 +657,102 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+//////////////////////////////////////////////////////
+/// HEART POP-UP ANIMATION
+/// A big heart that scales in, holds, then fades out over ~1.6s.
+/// Calls [onCompleted] once the animation finishes so the caller
+/// can remove it from the screen.
+//////////////////////////////////////////////////////
+class _HeartPop extends StatefulWidget {
+  final VoidCallback onCompleted;
+
+  const _HeartPop({required this.onCompleted});
+
+  @override
+  State<_HeartPop> createState() => _HeartPopState();
+}
+
+class _HeartPopState extends State<_HeartPop>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
+
+    _scale = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: 1.3)
+            .chain(CurveTween(curve: Curves.easeOutBack)),
+        weight: 20,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.3, end: 1.0),
+        weight: 10,
+      ),
+      TweenSequenceItem(
+        tween: ConstantTween(1.0),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.0, end: 0.85),
+        weight: 20,
+      ),
+    ]).animate(_controller);
+
+    _opacity = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: 1.0),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: ConstantTween(1.0),
+        weight: 55,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.0, end: 0.0),
+        weight: 30,
+      ),
+    ]).animate(_controller);
+
+    _controller.forward().whenComplete(widget.onCompleted);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _opacity.value,
+          child: Transform.scale(
+            scale: _scale.value,
+            child: child,
+          ),
+        );
+      },
+      child: const Icon(
+        Icons.favorite,
+        color: Colors.redAccent,
+        size: 64,
+        shadows: [Shadow(color: Colors.black45, blurRadius: 14)],
       ),
     );
   }
