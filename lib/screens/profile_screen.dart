@@ -159,7 +159,7 @@ class ProfileScreen extends StatelessWidget {
               );
             }),
             _buildMenuItem(context, Icons.lock, "Privacy Policy", () {}),
-            _buildMenuItem(context, Icons.settings, "Settings", () {}),
+            // _buildMenuItem(context, Icons.settings, "Settings", () {}),
        
             _buildMenuItem(context, Icons.help, "Help", () {}),
             _buildMenuItem(

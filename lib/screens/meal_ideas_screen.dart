@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 import 'mealdb_service.dart';
 import 'recipe_detail_screen.dart';
 
@@ -13,6 +12,7 @@ class MealIdeasScreen extends StatefulWidget {
 
 class _MealIdeasScreenState extends State<MealIdeasScreen> {
   String category = 'breakfast';
+  String cuisine = 'Any';
 
   late Future<List<MealSummary>> _mealsFuture;
   Future<MealSummary?>? _featuredFuture;
@@ -24,13 +24,20 @@ class _MealIdeasScreenState extends State<MealIdeasScreen> {
   }
 
   void _load() {
-    _mealsFuture = MealDbService.fetchMeals(category);
+    _mealsFuture = MealDbService.fetchMeals(category, area: cuisine);
     _featuredFuture = MealDbService.fetchRandomMeal();
   }
 
   void _switchCategory(String newCategory) {
     setState(() {
       category = newCategory;
+      _load();
+    });
+  }
+
+  void _switchCuisine(String newCuisine) {
+    setState(() {
+      cuisine = newCuisine;
       _load();
     });
   }
@@ -43,148 +50,184 @@ class _MealIdeasScreenState extends State<MealIdeasScreen> {
       onRefresh: () async => setState(_load),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             //////////////////////////////////////////////////////
             /// CATEGORY TABS
             //////////////////////////////////////////////////////
-            Row(
-              children: [
-                _CategoryChip(
-                  label: 'Breakfast',
-                  selected: category == 'breakfast',
-                  onTap: () => _switchCategory('breakfast'),
-                ),
-                const SizedBox(width: 8),
-                _CategoryChip(
-                  label: 'Lunch',
-                  selected: category == 'lunch',
-                  onTap: () => _switchCategory('lunch'),
-                ),
-                const SizedBox(width: 8),
-                _CategoryChip(
-                  label: 'Dinner',
-                  selected: category == 'dinner',
-                  onTap: () => _switchCategory('dinner'),
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  _CategoryChip(
+                    label: 'Breakfast',
+                    selected: category == 'breakfast',
+                    onTap: () => _switchCategory('breakfast'),
+                  ),
+                  const SizedBox(width: 8),
+                  _CategoryChip(
+                    label: 'Lunch',
+                    selected: category == 'lunch',
+                    onTap: () => _switchCategory('lunch'),
+                  ),
+                  const SizedBox(width: 8),
+                  _CategoryChip(
+                    label: 'Dinner',
+                    selected: category == 'dinner',
+                    onTap: () => _switchCategory('dinner'),
+                  ),
+                ],
+              ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
-            //////////////////////////////////////////////////////
-            /// RECIPE OF THE DAY (random meal from the API)
-            //////////////////////////////////////////////////////
-            FutureBuilder<MealSummary?>(
-              future: _featuredFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const _LoadingBox(height: 200);
-                }
-                final meal = snapshot.data;
-                if (meal == null) return const SizedBox.shrink();
-                return _FeaturedCard(
-                  meal: meal,
-                  onTap: () => _openRecipe(context, meal.id),
-                );
-              },
-            ),
 
-            const SizedBox(height: 24),
 
-            //////////////////////////////////////////////////////
-            /// LIVE RESULTS FOR THE SELECTED CATEGORY
-            //////////////////////////////////////////////////////
-            FutureBuilder<List<MealSummary>>(
-              future: _mealsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      _LoadingBox(height: 20, width: 140),
-                      SizedBox(height: 10),
-                      _LoadingBox(height: 130),
-                    ],
-                  );
-                }
+            const SizedBox(height: 20),
 
-                if (snapshot.hasError) {
-                  return Text(
-                    "Couldn't load meals. Pull down to retry.",
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                  );
-                }
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  //////////////////////////////////////////////////////
+                  /// RECIPE OF THE DAY (random meal from the API)
+                  //////////////////////////////////////////////////////
+                  FutureBuilder<MealSummary?>(
+                    future: _featuredFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const _LoadingBox(height: 200);
+                      }
+                      final meal = snapshot.data;
+                      if (meal == null) return const SizedBox.shrink();
+                      return _FeaturedCard(
+                        meal: meal,
+                        onTap: () => _openRecipe(context, meal.id),
+                      );
+                    },
+                  ),
 
-                final meals = snapshot.data ?? [];
-                if (meals.isEmpty) {
-                  return Text(
-                    'No meals found for this category yet.',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                  );
-                }
+                  const SizedBox(height: 24),
 
-                final recommended = meals.take(2).toList();
-                final forYou = meals.skip(2).take(10).toList();
+                  //////////////////////////////////////////////////////
+                  /// LIVE RESULTS FOR THE SELECTED CATEGORY + CUISINE
+                  //////////////////////////////////////////////////////
+                  FutureBuilder<List<MealSummary>>(
+                    future: _mealsFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            _LoadingBox(height: 20, width: 140),
+                            SizedBox(height: 10),
+                            _LoadingBox(height: 130),
+                          ],
+                        );
+                      }
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Recommended',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: recommended
-                          .map(
-                            (m) => Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: _SmallCard(
-                              meal: m,
-                              onTap: () => _openRecipe(context, m.id),
+                      if (snapshot.hasError) {
+                        return Text(
+                          "Couldn't load meals. Pull down to retry.",
+                          style: TextStyle(
+                            color:
+                            theme.colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                        );
+                      }
+
+                      final meals = snapshot.data ?? [];
+                      if (meals.isEmpty) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'No meals found for this combination yet.',
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurface
+                                    .withOpacity(0.6),
+                              ),
+                            ),
+                            if (cuisine != 'Any') ...[
+                              const SizedBox(height: 10),
+                              TextButton.icon(
+                                onPressed: () => _switchCuisine('Any'),
+                                icon: const Icon(Icons.public, size: 16),
+                                label: const Text('Show All Countries'),
+                              ),
+                            ],
+                          ],
+                        );
+                      }
+
+                      final recommended = meals.take(2).toList();
+                      final forYou = meals.skip(2).take(10).toList();
+
+                      final cuisineLabel =
+                      cuisine == 'Any' ? '' : '$cuisine ';
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Recommended',
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                      )
-                          .toList(),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'More $category Ideas',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    ...forYou.map(
-                          (m) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _ListCard(
-                          meal: m,
-                          onTap: () => _openRecipe(context, m.id),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: recommended
+                                .map(
+                                  (m) => Expanded(
+                                child: Padding(
+                                  padding:
+                                  const EdgeInsets.only(right: 10),
+                                  child: _SmallCard(
+                                    meal: m,
+                                    onTap: () =>
+                                        _openRecipe(context, m.id),
+                                  ),
+                                ),
+                              ),
+                            )
+                                .toList(),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'More $cuisineLabel$category Ideas',
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ...forYou.map(
+                                (m) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _ListCard(
+                                meal: m,
+                                onTap: () => _openRecipe(context, m.id),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
 
-            const SizedBox(height: 24),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -260,6 +303,69 @@ class _CategoryChip extends StatelessWidget {
                 ? Colors.black
                 : theme.colorScheme.onSurface.withOpacity(0.7),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+//////////////////////////////////////////////////////
+/// CUISINE / COUNTRY CHIP — flag on top, short label below,
+/// big enough to tap comfortably and easy to recognize.
+//////////////////////////////////////////////////////
+
+class _CuisineChip extends StatelessWidget {
+  final String flag;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _CuisineChip({
+    required this.flag,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 68,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+        decoration: BoxDecoration(
+          color: selected
+              ? theme.colorScheme.primary.withOpacity(0.15)
+              : theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? theme.colorScheme.primary : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(flag, style: const TextStyle(fontSize: 24)),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: selected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -391,7 +497,8 @@ class _SmallCard extends StatelessWidget {
             Positioned(
               top: 8,
               right: 8,
-              child: Icon(Icons.star_border, color: theme.colorScheme.primary),
+              child:
+              Icon(Icons.star_border, color: theme.colorScheme.primary),
             ),
             Positioned(
               left: 8,

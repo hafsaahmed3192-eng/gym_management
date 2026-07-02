@@ -17,12 +17,38 @@ class MealDbService {
     'dinner': ['Beef', 'Seafood', 'Lamb', 'Pork'],
   };
 
-  /// Fetch a list of meals (lightweight, no instructions yet) for a
-  /// given app meal type, optionally filtered by a search term.
-  static Future<List<MealSummary>> fetchMeals(String mealType,
-      {String? searchTerm}) async {
-    final categories = _categoryMap[mealType] ?? ['Miscellaneous'];
 
+
+  /// Fetch the live list of cuisines/areas straight from TheMealDB,
+  /// in case new ones are added later. Falls back to the static
+  /// [cuisines] list above if this call fails.
+  static Future<List<String>> fetchAreaNames() async {
+    final uri = Uri.parse('$_baseUrl/list.php?a=list');
+    final res = await http.get(uri);
+    final data = jsonDecode(res.body);
+    final list = (data['meals'] as List?) ?? [];
+    final names = list
+        .map((e) => (e['strArea'] ?? '').toString())
+        .where((s) => s.trim().isNotEmpty)
+        .toList();
+    names.sort();
+    return names;
+  }
+
+  /// Fetch a list of meals (lightweight, no instructions yet) for a
+  /// given app meal type, optionally filtered by a search term and/or
+  /// a cuisine/country (e.g. "Italian", "Indian", "Mexican").
+  ///
+  /// If [area] is provided and isn't "Any", results are narrowed to
+  /// that cuisine. We try to also respect [mealType]'s category bucket,
+  /// but if that combination has no overlap, we fall back to showing
+  /// all meals from the chosen country — the country choice is what
+  /// the user explicitly picked, so it takes priority.
+  static Future<List<MealSummary>> fetchMeals(
+      String mealType, {
+        String? searchTerm,
+        String? area,
+      }) async {
     // Search by name across the whole DB if a search term is given.
     if (searchTerm != null && searchTerm.trim().isNotEmpty) {
       final uri = Uri.parse('$_baseUrl/search.php?s=$searchTerm');
@@ -32,9 +58,11 @@ class MealDbService {
       return meals.map((m) => MealSummary.fromJson(m)).toList();
     }
 
-    // Otherwise pull from one or more categories that match the meal type
+    final categories = _categoryMap[mealType] ?? ['Miscellaneous'];
+
+    // Pull from one or more categories that match the meal type
     // and merge the results, removing duplicates.
-    final results = <String, MealSummary>{};
+    final categoryResults = <String, MealSummary>{};
     for (final category in categories) {
       final uri = Uri.parse('$_baseUrl/filter.php?c=$category');
       final res = await http.get(uri);
@@ -42,10 +70,49 @@ class MealDbService {
       final meals = (data['meals'] as List?) ?? [];
       for (final m in meals) {
         final summary = MealSummary.fromJson(m, fallbackCategory: category);
-        results[summary.id] = summary;
+        categoryResults[summary.id] = summary;
       }
     }
-    return results.values.toList();
+
+    // No cuisine filter requested — behave exactly as before.
+    if (area == null || area == 'Any' || area.trim().isEmpty) {
+      return categoryResults.values.toList();
+    }
+
+    // Fetch meals from the chosen cuisine/country.
+    final areaUri = Uri.parse('$_baseUrl/filter.php?a=$area');
+    final areaRes = await http.get(areaUri);
+    final areaData = jsonDecode(areaRes.body);
+    final areaMeals = (areaData['meals'] as List?) ?? [];
+    final areaResults = <String, MealSummary>{
+      for (final m in areaMeals) MealSummary.fromJson(m, fallbackCategory: area).id:
+      MealSummary.fromJson(m, fallbackCategory: area),
+    };
+
+    // Try to combine "this meal type" + "this cuisine".
+    final intersection = <String, MealSummary>{};
+    for (final id in categoryResults.keys) {
+      if (areaResults.containsKey(id)) {
+        intersection[id] = areaResults[id]!;
+      }
+    }
+
+    // If the combination has results, use it. Otherwise fall back to
+    // showing everything from the chosen cuisine, since that was the
+    // user's explicit, deliberate choice.
+    return intersection.isNotEmpty
+        ? intersection.values.toList()
+        : areaResults.values.toList();
+  }
+
+  /// Fetch meals purely by cuisine/country, no meal-type bucketing.
+  /// Handy for a "browse by country" style screen (e.g. Meal Ideas).
+  static Future<List<MealSummary>> fetchMealsByArea(String area) async {
+    final uri = Uri.parse('$_baseUrl/filter.php?a=$area');
+    final res = await http.get(uri);
+    final data = jsonDecode(res.body);
+    final meals = (data['meals'] as List?) ?? [];
+    return meals.map((m) => MealSummary.fromJson(m, fallbackCategory: area)).toList();
   }
 
   /// Fetch one random meal — used for "Recipe Of The Day".
@@ -72,7 +139,6 @@ class MealDbService {
 //////////////////////////////////////////////////////
 /// LIGHTWEIGHT SUMMARY (FOR LISTS / CARDS)
 //////////////////////////////////////////////////////
-
 class MealSummary {
   final String id;
   final String name;
@@ -100,7 +166,6 @@ class MealSummary {
 //////////////////////////////////////////////////////
 /// FULL DETAIL (FOR THE RECIPE DETAIL SCREEN)
 //////////////////////////////////////////////////////
-
 class MealDetail {
   final String id;
   final String name;
@@ -127,8 +192,7 @@ class MealDetail {
     for (var i = 1; i <= 20; i++) {
       final ingredient = json['strIngredient$i'];
       final measure = json['strMeasure$i'];
-      if (ingredient != null &&
-          ingredient.toString().trim().isNotEmpty) {
+      if (ingredient != null && ingredient.toString().trim().isNotEmpty) {
         final measureText =
         (measure != null && measure.toString().trim().isNotEmpty)
             ? '${measure.toString().trim()} '
@@ -136,7 +200,6 @@ class MealDetail {
         ingredients.add('$measureText${ingredient.toString().trim()}');
       }
     }
-
     return MealDetail(
       id: json['idMeal'] ?? '',
       name: json['strMeal'] ?? 'Untitled',
