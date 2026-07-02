@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'services/ad_service.dart';
 
 import 'package:gym_management/services/user_provider.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +11,8 @@ import 'screens/theme_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await MobileAds.instance.initialize();
+  AdService().loadInterstitialAd();
 
   //////////////////////////////////////////////////////
   /// LOAD SAVED THEME BEFORE RUNNING APP

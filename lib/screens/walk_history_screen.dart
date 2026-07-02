@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gym_management/widgets/banner_ad_widget.dart';
 import 'package:intl/intl.dart';
 
 import '../model/daily_steps_model.dart';
@@ -86,7 +87,9 @@ class WalkHistoryScreen extends StatelessWidget {
                 );
               },
             ),
+            bottomNavigationBar: const BannerAdWidget(),
     );
+    
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_management/widgets/banner_ad_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -241,7 +242,9 @@ class _AllWorkoutsScreenState
                 ),
               ],
             ),
+            bottomNavigationBar: const BannerAdWidget(),
     );
+    
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_management/screens/favorite_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:gym_management/screens/dashboard_screen.dart';
 import 'package:gym_management/screens/video_topic.dart';
@@ -190,21 +191,21 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
                       ),
                     ],
                   ),
-                  Row(
-                    children: [
-                      Icon(Icons.search, color: theme.colorScheme.primary),
-                      const SizedBox(width: 15),
-                      Icon(
-                        Icons.notifications,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 15),
-                      Icon(
-                        Icons.account_circle,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ],
-                  ),
+                  // Row(
+                  //   children: [
+                  //     Icon(Icons.search, color: theme.colorScheme.primary),
+                  //     const SizedBox(width: 15),
+                  //     Icon(
+                  //       Icons.notifications,
+                  //       color: theme.colorScheme.primary,
+                  //     ),
+                  //     const SizedBox(width: 15),
+                  //     Icon(
+                  //       Icons.account_circle,
+                  //       color: theme.colorScheme.primary,
+                  //     ),
+                  //   ],
+                  // ),
                 ],
               ),
             ),
@@ -639,9 +640,17 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
               color: theme.colorScheme.onSurface.withOpacity(0.5),
             ),
           ),
-          Icon(
-            Icons.bar_chart,
-            color: theme.colorScheme.onSurface.withOpacity(0.5),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+              );
+            },
+            child: Icon(
+              Icons.favorite,
+              color: theme.colorScheme.onSurface.withOpacity(0.5),
+            ),
           ),
           Icon(Icons.article, color: theme.colorScheme.primary),
           GestureDetector(

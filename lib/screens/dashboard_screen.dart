@@ -341,7 +341,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 15),
 
               //////////////////////////////////////////////////////
               /// QUICK ACTIONS
@@ -393,7 +393,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
 
-              const SizedBox(height: 35),
+              const SizedBox(height: 15),
 
               //////////////////////////////////////////////////////
               /// WORKOUTS SECTION
@@ -438,7 +438,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     )
                   : SizedBox(
-                      height: 300,
+                      height: 292,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         itemCount: workouts.length,
@@ -651,7 +651,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
 
-              const SizedBox(height: 100),
+              const SizedBox(height: 10),
             ],
           ),
         ),

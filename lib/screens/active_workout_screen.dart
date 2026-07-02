@@ -4,6 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../model/workout_model.dart';
+import '../services/ad_service.dart';
 
 class ActiveWorkoutScreen extends StatefulWidget {
   final Workout workout;
@@ -180,7 +181,10 @@ class _ActiveWorkoutScreenState
         ),
         actions: [
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              AdService().showInterstitialAd();
+              await Future.delayed(const Duration(milliseconds: 300));
+            if (!mounted) return;
               Navigator.pop(context);
               Navigator.pop(context);
             },
