@@ -6,10 +6,12 @@ class GenderSelectionScreen extends StatefulWidget {
   const GenderSelectionScreen({super.key});
 
   @override
-  State<GenderSelectionScreen> createState() => _GenderSelectionScreenState();
+  State<GenderSelectionScreen> createState() =>
+      _GenderSelectionScreenState();
 }
 
-class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
+class _GenderSelectionScreenState
+    extends State<GenderSelectionScreen> {
   String? selectedGender;
   bool _isLoading = false;
 
@@ -21,7 +23,8 @@ class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 30),
           child: Column(
             children: [
               const SizedBox(height: 60),
@@ -43,7 +46,8 @@ class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
               Text(
                 "Select your gender",
                 style: TextStyle(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface
+                      .withOpacity(0.6),
                   fontSize: 16,
                 ),
               ),
@@ -54,12 +58,17 @@ class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
               /// GENDER OPTIONS
               //////////////////////////////////////////////////////
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildGenderCard(
-                      gender: "Male", icon: Icons.male, theme: theme),
+                      gender: "Male",
+                      icon: Icons.male,
+                      theme: theme),
                   _buildGenderCard(
-                      gender: "Female", icon: Icons.female, theme: theme),
+                      gender: "Female",
+                      icon: Icons.female,
+                      theme: theme),
                 ],
               ),
 
@@ -72,48 +81,59 @@ class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: selectedGender == null || _isLoading
-                      ? null
-                      : () async {
-                    setState(() => _isLoading = true);
+                  onPressed:
+                      selectedGender == null || _isLoading
+                          ? null
+                          : () async {
+                              setState(
+                                  () => _isLoading = true);
+                              try {
+                                await AuthService()
+                                    .saveGender(
+                                        selectedGender!);
+                                if (!mounted) return;
 
-                    try {
-                      await AuthService().saveGender(selectedGender!);
-
-                      if (!mounted) return;
-
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                          const AgeSelectionScreen(),
-                        ),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString())),
-                      );
-                    }
-
-                    setState(() => _isLoading = false);
-                  },
+                                // ← push (not pushReplacement)
+                                // so back button returns here
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const AgeSelectionScreen(),
+                                  ),
+                                );
+                              } catch (e) {
+                                ScaffoldMessenger.of(
+                                        context)
+                                    .showSnackBar(SnackBar(
+                                        content: Text(
+                                            e.toString())));
+                              }
+                              if (mounted) {
+                                setState(() =>
+                                    _isLoading = false);
+                              }
+                            },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
+                    backgroundColor:
+                        theme.colorScheme.primary,
                     foregroundColor: Colors.black,
-                    disabledBackgroundColor: theme.cardColor,
+                    disabledBackgroundColor:
+                        theme.cardColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius:
+                          BorderRadius.circular(30),
                     ),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.black)
+                      ? const CircularProgressIndicator(
+                          color: Colors.black)
                       : const Text(
-                    "Continue",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                          "Continue",
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold),
+                        ),
                 ),
               ),
 
@@ -137,21 +157,20 @@ class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
     final bool isSelected = selectedGender == gender;
 
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedGender = gender;
-        });
-      },
+      onTap: () => setState(() => selectedGender = gender),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         width: 130,
         height: 160,
         decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary : theme.cardColor,
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.cardColor,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color:
-            isSelected ? theme.colorScheme.primary : Colors.transparent,
+            color: isSelected
+                ? theme.colorScheme.primary
+                : Colors.transparent,
             width: 2,
           ),
         ),
@@ -161,14 +180,17 @@ class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
             Icon(
               icon,
               size: 60,
-              color: isSelected ? Colors.black : theme.colorScheme.primary,
+              color: isSelected
+                  ? Colors.black
+                  : theme.colorScheme.primary,
             ),
             const SizedBox(height: 15),
             Text(
               gender,
               style: TextStyle(
-                color:
-                isSelected ? Colors.black : theme.colorScheme.onSurface,
+                color: isSelected
+                    ? Colors.black
+                    : theme.colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),

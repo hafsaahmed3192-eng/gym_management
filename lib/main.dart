@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:gym_management/screens/article_screen.dart';
+
 import 'package:gym_management/services/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';

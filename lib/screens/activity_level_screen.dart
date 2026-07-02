@@ -1,19 +1,56 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gym_management/screens/dashboard_screen.dart';
 import '../services/auth_service.dart';
 
 class ActivityLevelScreen extends StatefulWidget {
-  const ActivityLevelScreen({super.key});
+  final String? savedLevel;
+
+  const ActivityLevelScreen({super.key, this.savedLevel});
 
   @override
-  State<ActivityLevelScreen> createState() => _ActivityLevelScreenState();
+  State<ActivityLevelScreen> createState() =>
+      _ActivityLevelScreenState();
 }
 
-class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
+class _ActivityLevelScreenState
+    extends State<ActivityLevelScreen> {
   String? selectedLevel;
   bool _isLoading = false;
 
-  final List<String> activityLevels = ["Beginner", "Intermediate", "Advance"];
+  final List<String> activityLevels = [
+    "Beginner",
+    "Intermediate",
+    "Advance",
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _initLevel();
+  }
+
+  Future<void> _initLevel() async {
+    String? level = widget.savedLevel;
+
+    if (level == null || level.isEmpty) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        level = doc.data()?['activityLevel'] as String?;
+      }
+    }
+
+    if (level != null &&
+        level.isNotEmpty &&
+        activityLevels.contains(level)) {
+      setState(() => selectedLevel = level);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +60,8 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 30),
           child: Column(
             children: [
               const SizedBox(height: 50),
@@ -39,7 +77,8 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
                       color: theme.colorScheme.primary),
                   label: Text(
                     "Back",
-                    style: TextStyle(color: theme.colorScheme.primary),
+                    style: TextStyle(
+                        color: theme.colorScheme.primary),
                   ),
                 ),
               ),
@@ -61,12 +100,14 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
               const SizedBox(height: 10),
 
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
                   "Select your fitness experience level.",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface
+                        .withOpacity(0.6),
                   ),
                 ),
               ),
@@ -76,7 +117,8 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
               //////////////////////////////////////////////////////
               /// OPTIONS
               //////////////////////////////////////////////////////
-              ...activityLevels.map((level) => _buildOption(level, theme)),
+              ...activityLevels
+                  .map((level) => _buildOption(level, theme)),
 
               const Spacer(),
 
@@ -87,49 +129,58 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: selectedLevel == null || _isLoading
+                  onPressed: selectedLevel == null ||
+                          _isLoading
                       ? null
                       : () async {
-                    setState(() => _isLoading = true);
+                          setState(() => _isLoading = true);
+                          try {
+                            await AuthService()
+                                .saveActivityLevel(
+                                    selectedLevel!);
+                            if (!mounted) return;
 
-                    try {
-                      await AuthService().saveActivityLevel(
-                        selectedLevel!,
-                      );
-
-                      if (!mounted) return;
-
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DashboardScreen(),
-                        ),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString())),
-                      );
-                    }
-
-                    setState(() => _isLoading = false);
-                  },
+                            // Clear entire navigation stack —
+                            // user cannot press Back into onboarding
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const DashboardScreen(),
+                              ),
+                              (route) => false,
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(SnackBar(
+                                    content:
+                                        Text(e.toString())));
+                          }
+                          if (mounted) {
+                            setState(
+                                () => _isLoading = false);
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
+                    backgroundColor:
+                        theme.colorScheme.primary,
                     foregroundColor: Colors.black,
-                    disabledBackgroundColor: theme.cardColor,
+                    disabledBackgroundColor:
+                        theme.cardColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius:
+                          BorderRadius.circular(30),
                     ),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.black)
+                      ? const CircularProgressIndicator(
+                          color: Colors.black)
                       : const Text(
-                    "Continue",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                          "Continue",
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold),
+                        ),
                 ),
               ),
 
@@ -141,26 +192,18 @@ class _ActivityLevelScreenState extends State<ActivityLevelScreen> {
     );
   }
 
-  //////////////////////////////////////////////////////
-  /// OPTION BUILDER
-  //////////////////////////////////////////////////////
-
   Widget _buildOption(String level, ThemeData theme) {
     final bool isSelected = selectedLevel == level;
 
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedLevel = level;
-        });
-      },
+      onTap: () => setState(() => selectedLevel = level),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 25),
         height: 65,
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFD4E157) // lime highlight
+              ? const Color(0xFFD4E157)
               : theme.cardColor,
           borderRadius: BorderRadius.circular(35),
         ),

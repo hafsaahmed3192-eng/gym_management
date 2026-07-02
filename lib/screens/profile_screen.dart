@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'bmi_screen.dart';
 
 import '../services/user_provider.dart';
 import 'avatar_picker_sheet.dart';
@@ -141,6 +142,12 @@ class ProfileScreen extends StatelessWidget {
             //////////////////////////////////////////////////////
             /// MENU OPTIONS
             //////////////////////////////////////////////////////
+          _buildMenuItem(context, Icons.monitor_weight, "BMI Calculator", () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const BMIScreen()),
+  );
+}),
             _buildMenuItem(context, Icons.dark_mode, "Theme", () {
               Provider.of<ThemeProvider>(context, listen: false)
                   .toggleTheme();
@@ -153,6 +160,7 @@ class ProfileScreen extends StatelessWidget {
             }),
             _buildMenuItem(context, Icons.lock, "Privacy Policy", () {}),
             _buildMenuItem(context, Icons.settings, "Settings", () {}),
+       
             _buildMenuItem(context, Icons.help, "Help", () {}),
             _buildMenuItem(
               context,
